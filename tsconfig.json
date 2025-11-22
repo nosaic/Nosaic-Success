@@ -6,10 +6,10 @@
 		"outDir": "./output",
 		// Environment Settings
 		// See also https://aka.ms/tsconfig/module
-		"module": "esnext",
+		"module": "ES2022",
 		"moduleResolution": "bundler",
-		"target": "esnext",
-		"types": ["node"],
+		"target": "ES2022",
+		"types": ["node", "@cloudflare/workers-types"],
 		"lib": ["ES2022"],
 		// Other Outputs
 		"sourceMap": true,

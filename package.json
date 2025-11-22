@@ -4,9 +4,17 @@
 	"version": "1.0.0",
 	"type": "module",
 	"main": "src/index.js",
-	"scripts": {},
-	"devDependencies": {
-		"typescript": "^5.9.3"
+	"scripts": {
+		"build": "tsc"
 	},
-	"dependencies": {}
+	"devDependencies": {
+		"typescript": "^5.9.3",
+		"wrangler": "^4.50.0",
+		"@cloudflare/workers-types": "^4.20251121.0"
+	},
+	"dependencies": {
+		"@noble/hashes": "^2.0.1",
+		"hono": "^4.10.6",
+		"jose": "^6.1.2"
+	}
 }
