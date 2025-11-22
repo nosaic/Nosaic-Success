@@ -1,0 +1,12 @@
+{
+	"name": "nosaic-success-api",
+	"description": "Nosaic Success API",
+	"version": "1.0.0",
+	"type": "module",
+	"main": "src/index.js",
+	"scripts": {},
+	"devDependencies": {
+		"typescript": "^5.9.3"
+	},
+	"dependencies": {}
+}
