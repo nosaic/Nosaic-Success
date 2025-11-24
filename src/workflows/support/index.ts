@@ -6,7 +6,7 @@ export interface SupportCustomer {
 	id: string;
 	name: string;
 	email: string;
-	domain?: string;
+	domain?: string | undefined;
 	ticketCount: number;
 	openTickets: number;
 	avgCsat?: number;

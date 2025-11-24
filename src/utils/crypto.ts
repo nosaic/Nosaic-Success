@@ -44,7 +44,7 @@ export async function verifyPassword(
 		if (hash.length !== storedHash.length) return false;
 		let diff = 0;
 		for (let i = 0; i < hash.length; i++) {
-			diff |= hash[i] ^ storedHash[i];
+			diff |= (hash[i] ?? 0) ^ (storedHash[i] ?? 0);
 		}
 		return diff === 0;
 	} catch {

@@ -25,3 +25,9 @@ interface Env {
 	FRONTEND_URL: string;
 	API_URL: string;
 }
+
+// Extend Hono context variables
+type Variables = {
+	userId: string;
+	userEmail: string;
+};

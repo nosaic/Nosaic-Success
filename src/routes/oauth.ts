@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { requireAuth } from "../middleware/auth";
 import { encrypt, generateId } from "../utils/crypto";
 
-const oauth = new Hono<{ Bindings: Env }>();
+const oauth = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 oauth.use("*", requireAuth);
 

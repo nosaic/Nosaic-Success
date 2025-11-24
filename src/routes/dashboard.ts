@@ -4,7 +4,7 @@ import { Hono } from "hono";
 import { requireAuth } from "../middleware/auth";
 import { encrypt, decrypt } from "../utils/crypto";
 
-const dashboard = new Hono<{ Bindings: Env }>();
+const dashboard = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // Apply auth to all routes
 dashboard.use("*", requireAuth);

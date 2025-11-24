@@ -1,4 +1,4 @@
-import { SupportCustomer } from "./index";
+import type { SupportCustomer } from "./index";
 
 interface ZendeskConfig {
 	subdomain: string;
@@ -119,7 +119,7 @@ export async function fetchZendesk(
 			domain: undefined,
 			ticketCount: orgTickets.length,
 			openTickets: openTicketsList.length,
-			avgCsat,
+			avgCsat: avgCsat ?? undefined,
 			openTicketPriority: priorityCounts,
 			tickets: filteredTickets,
 		};

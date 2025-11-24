@@ -14,9 +14,9 @@ export async function fetchCRM(
 ): Promise<CRMCompany[]> {
 	switch (provider) {
 		case "hubspot":
-			return await fetchHubSpot(credentials);
+			return await fetchHubSpot(credentials, env);
 		case "salesforce":
-			return await fetchSalesforce(credentials);
+			return await fetchSalesforce(credentials, env);
 		default:
 			throw new Error(`Unknown CRM provider: ${provider}`);
 	}

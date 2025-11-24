@@ -28,26 +28,24 @@ export class ChurnReportWorkflow extends WorkflowEntrypoint<
 	WorkflowParams
 > {
 	async run(event: WorkflowEvent<WorkflowParams>, step: WorkflowStep) {
-		const params = event.params;
+		const params = (event as any).params as WorkflowParams;
 
 		// Step 1: Fetch CRM data (auto-retries on failure)
 		const crmData = await step.do("fetch CRM data", async () => {
 			if (!params.crmProvider || !params.crmMetadata) {
 				return null;
 			}
-			// Pass metadata as JSON string
 			const credentials = JSON.stringify(params.crmMetadata);
 			return await fetchCRM(params.crmProvider, credentials, this.env);
 		});
 
 		// Step 2: Fetch support platform data
 		const supportData = await step.do("fetch support data", async () => {
-			// Pass metadata as JSON string
+			const providerUpper = params.supportProvider.toUpperCase();
 			const credentials = JSON.stringify({
 				...params.supportMetadata,
-				clientId: this.env[`${params.supportProvider.toUpperCase()}_CLIENT_ID`],
-				clientSecret:
-					this.env[`${params.supportProvider.toUpperCase()}_CLIENT_SECRET`],
+				clientId: this.env[`${providerUpper}_CLIENT_ID` as keyof Env],
+				clientSecret: this.env[`${providerUpper}_CLIENT_SECRET` as keyof Env],
 			});
 			return await fetchSupport(params.supportProvider, credentials, this.env);
 		});

@@ -1,4 +1,4 @@
-import { CRMCompany } from "./index";
+import type { CRMCompany } from "./index";
 
 interface SalesforceConfig {
 	instanceUrl: string;

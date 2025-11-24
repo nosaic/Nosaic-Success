@@ -9,9 +9,9 @@
 		"deploy": "npx wrangler deploy"
 	},
 	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20251121.0",
 		"typescript": "^5.9.3",
-		"wrangler": "^4.50.0",
-		"@cloudflare/workers-types": "^4.20251121.0"
+		"wrangler": "^4.50.0"
 	},
 	"dependencies": {
 		"@noble/hashes": "^2.0.1",

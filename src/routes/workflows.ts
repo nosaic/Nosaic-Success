@@ -4,7 +4,7 @@ import { Hono } from "hono";
 import { requireAuth } from "../middleware/auth";
 import { decrypt } from "../utils/crypto";
 
-const workflows = new Hono<{ Bindings: Env }>();
+const workflows = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 workflows.use("*", requireAuth);
 

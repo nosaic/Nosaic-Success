@@ -1,5 +1,5 @@
-import { CRMCompany } from "./crm/index";
-import { SupportCustomer } from "./support/index";
+import type { CRMCompany } from "./crm/index";
+import type { SupportCustomer } from "./support/index";
 
 export interface CombinedCompany {
 	companyName: string;

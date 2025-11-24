@@ -9,7 +9,7 @@
 		"module": "ES2022",
 		"moduleResolution": "bundler",
 		"target": "ES2022",
-		"types": ["node", "@cloudflare/workers-types"],
+		"types": ["@cloudflare/workers-types"],
 		"lib": ["ES2022"],
 		// Other Outputs
 		"sourceMap": true,
@@ -17,7 +17,7 @@
 		"declarationMap": true,
 		// Stricter Typechecking Options
 		"noUncheckedIndexedAccess": true,
-		"exactOptionalPropertyTypes": true,
+		"exactOptionalPropertyTypes": false,
 		// Style Options
 		// "noImplicitReturns": true,
 		// "noImplicitOverride": true,
@@ -27,7 +27,6 @@
 		// "noPropertyAccessFromIndexSignature": true,
 		// Recommended Options
 		"strict": true,
-		"jsx": "react-jsx",
 		"verbatimModuleSyntax": true,
 		"isolatedModules": true,
 		"noUncheckedSideEffectImports": true,

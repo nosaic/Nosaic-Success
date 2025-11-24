@@ -1,4 +1,4 @@
-import { SupportCustomer } from "./index";
+import type { SupportCustomer } from "./index";
 
 interface IntercomConfig {
 	clientId: string;
