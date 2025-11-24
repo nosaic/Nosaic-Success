@@ -5,7 +5,8 @@
 	"type": "module",
 	"main": "src/index.js",
 	"scripts": {
-		"build": "tsc"
+		"build": "tsc",
+		"deploy": "npx wrangler deploy"
 	},
 	"devDependencies": {
 		"typescript": "^5.9.3",
