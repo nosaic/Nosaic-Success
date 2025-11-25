@@ -2,7 +2,7 @@
 
 import { Hono } from "hono";
 import { requireAuth } from "../middleware/auth";
-import { encrypt, decrypt } from "../utils/crypto";
+import { encrypt } from "@nosaic/core";
 
 const dashboard = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -14,9 +14,9 @@ dashboard.use("*", requireAuth);
  * Get user's workflow configuration
  */
 dashboard.get("/config", async (c) => {
-	const userId = c.get("userId");
+	const userId: string = c.get("userId");
 
-	const config = await c.env.DB.prepare(
+	const config: Record<string, unknown> | null = await c.env.DB.prepare(
 		"SELECT * FROM workflow_configs WHERE user_id = ?",
 	)
 		.bind(userId)
@@ -50,7 +50,7 @@ dashboard.get("/config", async (c) => {
  * Update workflow configuration
  */
 dashboard.put("/config", async (c) => {
-	const userId = c.get("userId");
+	const userId: string = c.get("userId");
 	const { reportFrequency, reportDestination, destinationConfig } =
 		await c.req.json();
 
@@ -68,11 +68,11 @@ dashboard.put("/config", async (c) => {
 	}
 
 	// Calculate next run time
-	const now = Date.now();
-	const nextRun = calculateNextRun(reportFrequency, now);
+	const now: number = Date.now();
+	const nextRun: number = calculateNextRun(reportFrequency, now);
 
 	// Check if config exists
-	const existing = await c.env.DB.prepare(
+	const existing: Record<string, unknown> | null = await c.env.DB.prepare(
 		"SELECT user_id FROM workflow_configs WHERE user_id = ?",
 	)
 		.bind(userId)
@@ -121,9 +121,9 @@ dashboard.put("/config", async (c) => {
  * Enable/disable workflow execution
  */
 dashboard.post("/config/toggle", async (c) => {
-	const userId = c.get("userId");
+	const userId: string = c.get("userId");
 
-	const config = await c.env.DB.prepare(
+	const config: Record<string, unknown> | null = await c.env.DB.prepare(
 		"SELECT enabled FROM workflow_configs WHERE user_id = ?",
 	)
 		.bind(userId)
@@ -133,7 +133,7 @@ dashboard.post("/config/toggle", async (c) => {
 		return c.json({ error: "No configuration found" }, 404);
 	}
 
-	const newState = config.enabled === 1 ? 0 : 1;
+	const newState: 0 | 1 = config.enabled === 1 ? 0 : 1;
 
 	await c.env.DB.prepare(
 		"UPDATE workflow_configs SET enabled = ?, updated_at = ? WHERE user_id = ?",
@@ -149,17 +149,17 @@ dashboard.post("/config/toggle", async (c) => {
  * Set CRM provider credentials
  */
 dashboard.post("/integrations/crm", async (c) => {
-	const userId = c.get("userId");
+	const userId: string = c.get("userId");
 	const { provider, apiKey } = await c.req.json();
 
 	if (!["hubspot", "salesforce", "none"].includes(provider)) {
 		return c.json({ error: "Invalid CRM provider" }, 400);
 	}
 
-	const encryptedCreds =
+	const encryptedCreds: string | null =
 		provider === "none" ? null : await encrypt(apiKey, c.env.ENCRYPTION_KEY);
 
-	const existing = await c.env.DB.prepare(
+	const existing: Record<string, unknown> | null = await c.env.DB.prepare(
 		"SELECT user_id FROM workflow_configs WHERE user_id = ?",
 	)
 		.bind(userId)
@@ -190,16 +190,16 @@ dashboard.post("/integrations/crm", async (c) => {
  * Set support provider credentials
  */
 dashboard.post("/integrations/support", async (c) => {
-	const userId = c.get("userId");
+	const userId: string = c.get("userId");
 	const { provider, apiKey } = await c.req.json();
 
 	if (!["zendesk", "intercom"].includes(provider)) {
 		return c.json({ error: "Invalid support provider" }, 400);
 	}
 
-	const encryptedCreds = await encrypt(apiKey, c.env.ENCRYPTION_KEY);
+	const encryptedCreds: string = await encrypt(apiKey, c.env.ENCRYPTION_KEY);
 
-	const existing = await c.env.DB.prepare(
+	const existing: Record<string, unknown> | null = await c.env.DB.prepare(
 		"SELECT user_id FROM workflow_configs WHERE user_id = ?",
 	)
 		.bind(userId)
@@ -225,10 +225,10 @@ dashboard.post("/integrations/support", async (c) => {
  * Get report history
  */
 dashboard.get("/reports", async (c) => {
-	const userId = c.get("userId");
-	const limit = parseInt(c.req.query("limit") || "10");
+	const userId: string = c.get("userId");
+	const limit: number = parseInt(c.req.query("limit") || "10");
 
-	const reports = await c.env.DB.prepare(
+	const reports: D1Result<Record<string, unknown>> = await c.env.DB.prepare(
 		`SELECT id, status, error_message, created_at
      FROM reports
      WHERE user_id = ?
@@ -246,10 +246,10 @@ dashboard.get("/reports", async (c) => {
  * Get specific report content
  */
 dashboard.get("/reports/:id", async (c) => {
-	const userId = c.get("userId");
-	const reportId = c.req.param("id");
+	const userId: string = c.get("userId");
+	const reportId: string = c.req.param("id");
 
-	const report = await c.env.DB.prepare(
+	const report: Record<string, unknown> | null = await c.env.DB.prepare(
 		"SELECT * FROM reports WHERE id = ? AND user_id = ?",
 	)
 		.bind(reportId, userId)

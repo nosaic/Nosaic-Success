@@ -10,13 +10,13 @@ export interface CRMCompany {
 export async function fetchCRM(
 	provider: string,
 	credentials: string,
-	env: Env,
 ): Promise<CRMCompany[]> {
+	const creds: any = JSON.parse(credentials);
 	switch (provider) {
 		case "hubspot":
-			return await fetchHubSpot(credentials, env);
+			return await fetchHubSpot(creds.clientId, creds.clientSecret);
 		case "salesforce":
-			return await fetchSalesforce(credentials, env);
+			return await fetchSalesforce(creds.instanceUrl, creds.clientId, creds.clientSecret);
 		default:
 			throw new Error(`Unknown CRM provider: ${provider}`);
 	}

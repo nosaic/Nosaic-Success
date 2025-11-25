@@ -14,7 +14,7 @@ const app = new Hono<{ Bindings: Env }>();
 app.use(
 	"*",
 	cors({
-		origin: (origin) => origin,
+		origin: (origin: string): string => origin,
 		credentials: true,
 	}),
 );
@@ -30,7 +30,7 @@ app.get("/", (c) => c.json({ status: "ok" }));
 
 export default {
 	fetch: app.fetch,
-	async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+	async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
 		ctx.waitUntil(handleScheduled(env));
 	},
 };

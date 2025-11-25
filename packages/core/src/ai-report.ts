@@ -1,4 +1,4 @@
-import { CombinedCompany } from "./combiner";
+import type { CombinedCompany } from "./combiner";
 
 export async function generateChurnReport(
 	companies: CombinedCompany[],
@@ -48,6 +48,9 @@ Be specific and data-driven. Focus on actionable insights.`;
 		throw new Error(`OpenRouter API error: ${response.statusText}`);
 	}
 
-	const data = await response.json();
+	const data = await response.json() as { choices: { message: { content: string } }[] };
+	if (!data.choices?.[0]?.message?.content) {
+		throw new Error("Invalid response from OpenRouter API");
+	}
 	return data.choices[0].message.content;
 }

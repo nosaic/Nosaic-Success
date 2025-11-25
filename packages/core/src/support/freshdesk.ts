@@ -21,7 +21,7 @@ const PRIORITY_MAP: any = {
 };
 
 async function getAccessToken(config: FreshdeskConfig): Promise<string> {
-	const response = await fetch(
+	const response: Response = await fetch(
 		`https://${config.subdomain}.freshdesk.com/oauth/token`,
 		{
 			method: "POST",
@@ -37,7 +37,7 @@ async function getAccessToken(config: FreshdeskConfig): Promise<string> {
 	if (!response.ok)
 		throw new Error(`Freshdesk token error: ${response.statusText}`);
 
-	const data = await response.json();
+	const data = await response.json() as { access_token: string };
 	return data.access_token;
 }
 
@@ -45,9 +45,9 @@ export async function fetchFreshdesk(
 	configJson: string,
 ): Promise<SupportCustomer[]> {
 	const config: FreshdeskConfig = JSON.parse(configJson);
-	const accessToken = await getAccessToken(config);
+	const accessToken: string = await getAccessToken(config);
 
-	const ticketsRes = await fetch(
+	const ticketsRes: Response = await fetch(
 		`https://${config.subdomain}.freshdesk.com/api/v2/tickets`,
 		{
 			headers: {
@@ -60,11 +60,11 @@ export async function fetchFreshdesk(
 	if (!ticketsRes.ok)
 		throw new Error(`Freshdesk API error: ${ticketsRes.statusText}`);
 
-	const tickets = await ticketsRes.json();
+	const tickets = await ticketsRes.json() as any[];
 
 	const groupedData: any = {};
-	tickets.forEach((t: any) => {
-		const companyId = t.company_id || "Unknown";
+	tickets.forEach((t: any): void => {
+		const companyId: any = t.company_id || "Unknown";
 
 		const cleanedTicket = {
 			ticketSubject: t.subject,
@@ -95,7 +95,7 @@ export async function fetchFreshdesk(
 
 		if (t.status === 2) {
 			groupedData[companyId].openTicketsCount++;
-			const priorityName = PRIORITY_MAP[t.priority]?.toLowerCase();
+			const priorityName: any = PRIORITY_MAP[t.priority]?.toLowerCase();
 			if (
 				priorityName &&
 				groupedData[companyId].openTicketPriorities[priorityName] !== undefined
@@ -105,14 +105,14 @@ export async function fetchFreshdesk(
 		}
 	});
 
-	const companiesRes = await fetch(
+	const companiesRes: Response = await fetch(
 		`https://${config.subdomain}.freshdesk.com/api/v2/companies`,
 		{ headers: { Authorization: `Bearer ${accessToken}` } },
 	);
-	const companies = await companiesRes.json();
+	const companies = await companiesRes.json() as any[];
 
 	const companyMap: any = {};
-	companies.forEach((company: any) => {
+	companies.forEach((company: any): void => {
 		companyMap[company.id] = {
 			companyName: company.name || null,
 			healthScore: company.health_score || null,
@@ -122,7 +122,7 @@ export async function fetchFreshdesk(
 	});
 
 	return Object.values(groupedData).map((companyEntry: any) => {
-		const details = companyMap[companyEntry.companyId] || {};
+		const details: any = companyMap[companyEntry.companyId] || {};
 		return {
 			id: companyEntry.companyId,
 			name: details.companyName || "Unknown Company",
@@ -137,4 +137,40 @@ export async function fetchFreshdesk(
 			tickets: companyEntry.tickets,
 		};
 	});
+}
+
+// OAuth functions
+export function authorizeFreshdesk(clientId: string, redirectUri: string, userId: string, subdomain: string): string {
+	const state: string = btoa(JSON.stringify({ userId, provider: "freshdesk", subdomain }));
+	const params = new URLSearchParams({
+		client_id: clientId,
+		redirect_uri: `${redirectUri}/oauth/freshdesk/callback`,
+		response_type: "code",
+		state,
+	});
+	return `https://${subdomain}.freshdesk.com/oauth/authorize?${params}`;
+}
+
+export async function callbackFreshdesk(code: string, clientId: string, clientSecret: string, redirectUri: string, subdomain: string):
+    Promise<{ subdomain: string; clientId: string; clientSecret: string }> {
+	const tokenResponse: Response = await fetch(
+		`https://${subdomain}.freshdesk.com/oauth/token`,
+		{
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				code,
+				client_id: clientId,
+				client_secret: clientSecret,
+				redirect_uri: `${redirectUri}/oauth/freshdesk/callback`,
+				grant_type: "authorization_code",
+			}),
+		},
+	);
+
+	if (!tokenResponse.ok) {
+		throw new Error(`Freshdesk OAuth error: ${tokenResponse.statusText}`);
+	}
+
+	return { subdomain, clientId, clientSecret };
 }

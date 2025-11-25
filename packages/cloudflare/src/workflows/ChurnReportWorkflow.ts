@@ -5,13 +5,15 @@ import {
 	WorkflowStep,
 	type WorkflowEvent,
 } from "cloudflare:workers";
-import { fetchCRM } from "./crm/index";
-import { fetchSupport } from "./support/index";
-import { combineData } from "./combiner";
-import { generateChurnReport } from "./ai-report";
-import { sendEmail } from "../utils/email";
-import { sendSlack } from "../utils/slack";
-import { generateId } from "../utils/crypto";
+import {
+    fetchCRM,
+    fetchSupport,
+    combineData,
+    generateChurnReport,
+    sendEmail,
+    sendSlack,
+    generateId, type CRMCompany, type SupportCustomer, type CombinedCompany,
+} from "@nosaic/core";
 
 interface WorkflowParams {
 	userId: string;
@@ -27,31 +29,30 @@ export class ChurnReportWorkflow extends WorkflowEntrypoint<
 	Env,
 	WorkflowParams
 > {
-	async run(event: WorkflowEvent<WorkflowParams>, step: WorkflowStep) {
+	async run(event: WorkflowEvent<WorkflowParams>, step: WorkflowStep): Promise<{ success: boolean; userId: string }> {
 		const params = (event as any).params as WorkflowParams;
 
 		// Step 1: Fetch CRM data (auto-retries on failure)
-		const crmData = await step.do("fetch CRM data", async () => {
+		const crmData: CRMCompany[] | null = await step.do("fetch CRM data", async (): Promise<CRMCompany[] | null> => {
 			if (!params.crmProvider || !params.crmMetadata) {
 				return null;
 			}
-			const credentials = JSON.stringify(params.crmMetadata);
-			return await fetchCRM(params.crmProvider, credentials, this.env);
+			return await fetchCRM(params.crmProvider, JSON.stringify(params.crmMetadata));
 		});
 
 		// Step 2: Fetch support platform data
-		const supportData = await step.do("fetch support data", async () => {
-			const providerUpper = params.supportProvider.toUpperCase();
-			const credentials = JSON.stringify({
+		const supportData: SupportCustomer[] = await step.do("fetch support data", async (): Promise<SupportCustomer[]> => {
+			const providerUpper: string = params.supportProvider.toUpperCase();
+			const credentials = {
 				...params.supportMetadata,
 				clientId: this.env[`${providerUpper}_CLIENT_ID` as keyof Env],
 				clientSecret: this.env[`${providerUpper}_CLIENT_SECRET` as keyof Env],
-			});
-			return await fetchSupport(params.supportProvider, credentials, this.env);
+			};
+			return await fetchSupport(params.supportProvider, JSON.stringify(credentials));
 		});
 
 		// Step 3: Combine data into company objects
-		const companies = await step.do("combine data", async () => {
+		const companies: CombinedCompany[] = await step.do("combine data", async (): Promise<CombinedCompany[]> => {
 			return combineData(
 				crmData,
 				supportData,
@@ -61,12 +62,12 @@ export class ChurnReportWorkflow extends WorkflowEntrypoint<
 		});
 
 		// Step 4: Generate AI churn report
-		const report = await step.do("generate AI report", async () => {
+		const report: string = await step.do("generate AI report", async (): Promise<string> => {
 			return await generateChurnReport(companies, this.env.OPENROUTER_API_KEY);
 		});
 
 		// Step 5: Send report
-		await step.do("send report", async () => {
+		await step.do("send report", async (): Promise<void> => {
 			if (params.reportDestination === "email") {
 				await sendEmail(
 					report,
@@ -79,7 +80,7 @@ export class ChurnReportWorkflow extends WorkflowEntrypoint<
 		});
 
 		// Step 6: Log completion to database
-		await step.do("log report", async () => {
+		await step.do("log report", async (): Promise<void> => {
 			await this.env.DB.prepare(
 				`INSERT INTO reports (id, user_id, report_content, status, created_at)
          VALUES (?, ?, ?, ?, ?)`,

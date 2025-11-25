@@ -6,7 +6,7 @@ interface IntercomConfig {
 }
 
 async function getAccessToken(config: IntercomConfig): Promise<string> {
-	const response = await fetch("https://api.intercom.io/auth/eagle/token", {
+	const response: Response = await fetch("https://api.intercom.io/auth/eagle/token", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({
@@ -18,7 +18,7 @@ async function getAccessToken(config: IntercomConfig): Promise<string> {
 	if (!response.ok)
 		throw new Error(`Intercom token error: ${response.statusText}`);
 
-	const data = await response.json();
+	const data = await response.json() as { token: string };
 	return data.token;
 }
 
@@ -26,9 +26,9 @@ export async function fetchIntercom(
 	configJson: string,
 ): Promise<SupportCustomer[]> {
 	const config: IntercomConfig = JSON.parse(configJson);
-	const accessToken = await getAccessToken(config);
+	const accessToken: string = await getAccessToken(config);
 
-	const ticketsRes = await fetch("https://api.intercom.io/tickets/search", {
+	const ticketsRes: Response = await fetch("https://api.intercom.io/tickets/search", {
 		method: "POST",
 		headers: {
 			Authorization: `Bearer ${accessToken}`,
@@ -53,13 +53,13 @@ export async function fetchIntercom(
 	if (!ticketsRes.ok)
 		throw new Error(`Intercom API error: ${ticketsRes.statusText}`);
 
-	const ticketsData = await ticketsRes.json();
-	const tickets = ticketsData.tickets;
+	const ticketsData = await ticketsRes.json() as { tickets: any[] };
+	const tickets: any[] = ticketsData.tickets;
 
 	const grouped: any = {};
-	tickets.forEach((ticket: any) => {
+	tickets.forEach((ticket: any): void => {
 		if (ticket.open) {
-			const companyId = ticket.company_id || "unknown_company";
+			const companyId: any = ticket.company_id || "unknown_company";
 
 			if (!grouped[companyId]) {
 				grouped[companyId] = {
@@ -85,17 +85,17 @@ export async function fetchIntercom(
 		}
 	});
 
-	const companiesRes = await fetch("https://api.intercom.io/companies", {
+	const companiesRes: Response = await fetch("https://api.intercom.io/companies", {
 		headers: {
 			Authorization: `Bearer ${accessToken}`,
 			"Intercom-Version": "2.14",
 		},
 	});
-	const companiesData = await companiesRes.json();
+	const companiesData = await companiesRes.json() as { data: any[] };
 
 	const companyMap: any = {};
 	if (Array.isArray(companiesData.data)) {
-		companiesData.data.forEach((company: any) => {
+		companiesData.data.forEach((company: any): void => {
 			companyMap[company.id] = company.name || "Unknown Company";
 		});
 	}
@@ -109,4 +109,37 @@ export async function fetchIntercom(
 		openTickets: company.openTicketCount,
 		tickets: company.tickets,
 	}));
+}
+
+// OAuth functions
+export function authorizeIntercom(clientId: string, redirectUri: string, userId: string): string {
+	const state: string = btoa(JSON.stringify({ userId, provider: "intercom" }));
+	const params = new URLSearchParams({
+		client_id: clientId,
+		redirect_uri: `${redirectUri}/oauth/intercom/callback`,
+		state,
+	});
+	return `https://app.intercom.com/oauth?${params}`;
+}
+
+export async function callbackIntercom(code: string, clientId: string, clientSecret: string, redirectUri: string): Promise<{ clientId: string; clientSecret: string }> {
+	const tokenResponse: Response = await fetch(
+		"https://api.intercom.io/auth/eagle/token",
+		{
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				code,
+				client_id: clientId,
+				client_secret: clientSecret,
+				redirect_uri: `${redirectUri}/oauth/intercom/callback`,
+			}),
+		},
+	);
+
+	if (!tokenResponse.ok) {
+		throw new Error(`Intercom OAuth error: ${tokenResponse.statusText}`);
+	}
+
+	return { clientId, clientSecret };
 }

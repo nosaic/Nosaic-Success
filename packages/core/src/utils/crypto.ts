@@ -1,5 +1,5 @@
-import { argon2id } from "@noble/hashes/argon2";
-import { randomBytes } from "@noble/hashes/utils";
+import { argon2id } from "@noble/hashes/argon2.js";
+import { randomBytes } from "@noble/hashes/utils.js";
 
 /**
  * Hash password with Argon2id
@@ -58,7 +58,7 @@ export async function verifyPassword(
 export async function encrypt(data: string, keyHex: string): Promise<string> {
 	const key = await crypto.subtle.importKey(
 		"raw",
-		hexToBytes(keyHex),
+		hexToBytes(keyHex) as BufferSource,
 		{ name: "AES-GCM" },
 		false,
 		["encrypt"],
@@ -90,7 +90,7 @@ export async function decrypt(
 ): Promise<string> {
 	const key = await crypto.subtle.importKey(
 		"raw",
-		hexToBytes(keyHex),
+		hexToBytes(keyHex) as BufferSource,
 		{ name: "AES-GCM" },
 		false,
 		["decrypt"],
@@ -115,7 +115,7 @@ export async function decrypt(
 export function generateId(prefix: string): string {
 	const bytes = randomBytes(16);
 	const hex = Array.from(bytes)
-		.map((b) => b.toString(16).padStart(2, "0"))
+		.map((b: number) => b.toString(16).padStart(2, "0"))
 		.join("");
 	return `${prefix}_${hex}`;
 }

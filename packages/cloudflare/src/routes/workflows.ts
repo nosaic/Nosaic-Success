@@ -2,7 +2,6 @@
 
 import { Hono } from "hono";
 import { requireAuth } from "../middleware/auth";
-import { decrypt } from "../utils/crypto";
 
 const workflows = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -13,7 +12,7 @@ workflows.use("*", requireAuth);
  * Manually trigger workflow execution
  */
 workflows.post("/trigger", async (c) => {
-	const userId = c.get("userId");
+	const userId: string = c.get("userId");
 
 	// Get workflow config
 	const config = (await c.env.DB.prepare(
@@ -27,7 +26,7 @@ workflows.post("/trigger", async (c) => {
 	}
 
 	// Get OAuth connections
-	const connections = await c.env.DB.prepare(
+	const connections: D1Result<Record<string, unknown>> = await c.env.DB.prepare(
 		"SELECT * FROM oauth_connections WHERE user_id = ?",
 	)
 		.bind(userId)
@@ -39,26 +38,26 @@ workflows.post("/trigger", async (c) => {
 	}
 
 	// Get support connection (required)
-	const supportConn = connMap.get(config.support_provider);
+	const supportConn: any = connMap.get(config.support_provider);
 	if (!supportConn) {
 		return c.json({ error: "Support platform not connected" }, 400);
 	}
 
-	const supportMetadata = supportConn.scope
+	const supportMetadata: any = supportConn.scope
 		? JSON.parse(supportConn.scope)
 		: {};
 
 	// Get CRM connection (optional)
-	let crmMetadata = null;
+	let crmMetadata: any = null;
 	if (config.crm_provider && config.crm_provider !== "none") {
-		const crmConn = connMap.get(config.crm_provider);
+		const crmConn: any = connMap.get(config.crm_provider);
 		if (crmConn) {
 			crmMetadata = crmConn.scope ? JSON.parse(crmConn.scope) : {};
 		}
 	}
 
 	// Trigger workflow
-	const instance = await c.env.CHURN_REPORT.create({
+	const instance: WorkflowInstance = await c.env.CHURN_REPORT.create({
 		params: {
 			userId,
 			crmProvider: config.crm_provider,
@@ -81,9 +80,9 @@ workflows.post("/trigger", async (c) => {
  * Check workflow execution status
  */
 workflows.get("/status/:id", async (c) => {
-	const workflowId = c.req.param("id");
+	const workflowId: string = c.req.param("id");
 
-	const instance = await c.env.CHURN_REPORT.get(workflowId);
+	const instance: WorkflowInstance = await c.env.CHURN_REPORT.get(workflowId);
 
 	if (!instance) {
 		return c.json({ error: "Workflow not found" }, 404);

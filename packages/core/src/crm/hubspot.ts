@@ -6,7 +6,7 @@ interface HubSpotConfig {
 }
 
 async function getAccessToken(config: HubSpotConfig): Promise<string> {
-	const response = await fetch("https://api.hubapi.com/oauth/v1/token", {
+	const response: Response = await fetch("https://api.hubapi.com/oauth/v1/token", {
 		method: "POST",
 		headers: { "Content-Type": "application/x-www-form-urlencoded" },
 		body: new URLSearchParams({
@@ -19,18 +19,18 @@ async function getAccessToken(config: HubSpotConfig): Promise<string> {
 	if (!response.ok)
 		throw new Error(`HubSpot token error: ${response.statusText}`);
 
-	const data = await response.json();
+	const data = await response.json() as { access_token: string };
 	return data.access_token;
 }
 
 export async function fetchHubSpot(
-	configJson: string,
-	env: Env,
+	clientId: string,
+	clientSecret: string,
 ): Promise<CRMCompany[]> {
-	const config: HubSpotConfig = JSON.parse(configJson);
-	const accessToken = await getAccessToken(config);
+	const config: HubSpotConfig = { clientId, clientSecret };
+	const accessToken: string = await getAccessToken(config);
 
-	const properties = [
+	const properties: string[] = [
 		"name",
 		"hubspot_owner_id",
 		"lifecyclestage",
@@ -46,7 +46,7 @@ export async function fetchHubSpot(
 		"recent_deal_amount",
 	];
 
-	const response = await fetch(
+	const response: Response = await fetch(
 		`https://api.hubapi.com/crm/v3/objects/companies?properties=${properties.join(",")}`,
 		{
 			headers: {
@@ -59,7 +59,7 @@ export async function fetchHubSpot(
 	if (!response.ok)
 		throw new Error(`HubSpot API error: ${response.statusText}`);
 
-	const data = await response.json();
+	const data = await response.json() as { results: any[] };
 
 	function getDateFromUnixTime(unixTime: string | null): string | null {
 		if (!unixTime) return null;
@@ -91,4 +91,37 @@ export async function fetchHubSpot(
 		totalRevenue: Number(company.properties?.total_revenue || 0),
 		CSMSentiment: company.properties?.hs_csm_sentiment || null,
 	}));
+}
+
+// OAuth functions
+export function authorizeHubSpot(clientId: string, redirectUri: string, userId: string): string {
+	const state: string = btoa(JSON.stringify({ userId, provider: "hubspot" }));
+	const params = new URLSearchParams({
+		client_id: clientId,
+		redirect_uri: `${redirectUri}/oauth/hubspot/callback`,
+		scope: "crm.objects.companies.read",
+		state,
+	});
+	return `https://app.hubspot.com/oauth/authorize?${params}`;
+}
+
+export async function callbackHubSpot(code: string, clientId: string, clientSecret: string, redirectUri: string):
+    Promise<{ clientId: string; clientSecret: string }> {
+	const tokenResponse: Response = await fetch("https://api.hubapi.com/oauth/v1/token", {
+		method: "POST",
+		headers: { "Content-Type": "application/x-www-form-urlencoded" },
+		body: new URLSearchParams({
+			code,
+			client_id: clientId,
+			client_secret: clientSecret,
+			redirect_uri: `${redirectUri}/oauth/hubspot/callback`,
+			grant_type: "authorization_code",
+		}),
+	});
+
+	if (!tokenResponse.ok) {
+		throw new Error(`HubSpot OAuth error: ${tokenResponse.statusText}`);
+	}
+
+	return { clientId, clientSecret };
 }

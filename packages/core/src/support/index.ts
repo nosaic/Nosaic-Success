@@ -20,7 +20,6 @@ export interface SupportCustomer {
 export async function fetchSupport(
 	provider: string,
 	credentials: string,
-	env: Env,
 ): Promise<SupportCustomer[]> {
 	switch (provider) {
 		case "zendesk":

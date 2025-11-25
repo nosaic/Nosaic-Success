@@ -6,15 +6,15 @@ import {
 	verifyPassword,
 	generateId,
 	generateToken,
-} from "../utils/crypto";
-import { signAccessToken } from "../utils/jwt";
+	signAccessToken,
+} from "@nosaic/core";
 
 const auth = new Hono<{ Bindings: Env }>();
 
 /**
  * POST /auth/register
  */
-auth.post("/register", async (c) => {
+auth.post("/register", async (c): Promise<Response> => {
 	const { email, password } = await c.req.json();
 
 	// Validate input
@@ -91,7 +91,7 @@ auth.post("/login", async (c) => {
 	}
 
 	// Verify password
-	const valid = await verifyPassword(password, user.password_hash);
+	const valid: boolean = await verifyPassword(password, user.password_hash);
 	if (!valid) {
 		return c.json({ error: "Invalid credentials" }, 401);
 	}
@@ -102,16 +102,16 @@ auth.post("/login", async (c) => {
 	}
 
 	// Generate tokens
-	const accessToken = await signAccessToken(
+	const accessToken: string = await signAccessToken(
 		{ userId: user.id, email: user.email },
 		c.env.JWT_SECRET,
 	);
 
-	const refreshToken = generateToken();
-	const refreshTokenHash = await hashPassword(refreshToken);
+	const refreshToken: string = generateToken();
+	const refreshTokenHash: string = await hashPassword(refreshToken);
 
 	// Store refresh token
-	const sessionId = generateId("sess");
+	const sessionId: string = generateId("sess");
 	await c.env.DB.prepare(
 		`INSERT INTO sessions (id, user_id, refresh_token_hash, expires_at, created_at)
      VALUES (?, ?, ?, ?, ?)`,
@@ -139,13 +139,13 @@ auth.post("/login", async (c) => {
  * GET /auth/verify
  */
 auth.get("/verify", async (c) => {
-	const token = c.req.query("token");
+	const token: string | undefined = c.req.query("token");
 
 	if (!token) {
 		return c.json({ error: "Verification token required" }, 400);
 	}
 
-	const user = await c.env.DB.prepare(
+	const user: Record<string, unknown> | null = await c.env.DB.prepare(
 		"SELECT id FROM users WHERE verification_token = ?",
 	)
 		.bind(token)
@@ -175,7 +175,7 @@ auth.post("/refresh", async (c) => {
 	}
 
 	// Get all sessions (we need to check each hash)
-	const sessions = await c.env.DB.prepare(
+	const sessions: D1Result<Record<string, unknown>> = await c.env.DB.prepare(
 		"SELECT id, user_id, refresh_token_hash, expires_at FROM sessions WHERE expires_at > ?",
 	)
 		.bind(Date.now())
@@ -203,7 +203,7 @@ auth.post("/refresh", async (c) => {
 		.first()) as any;
 
 	// Generate new access token
-	const accessToken = await signAccessToken(
+	const accessToken: string = await signAccessToken(
 		{ userId: user.id, email: user.email },
 		c.env.JWT_SECRET,
 	);
@@ -222,7 +222,7 @@ auth.post("/logout", async (c) => {
 	}
 
 	// Find and delete session
-	const sessions = await c.env.DB.prepare(
+	const sessions: D1Result<Record<string, unknown>> = await c.env.DB.prepare(
 		"SELECT id, refresh_token_hash FROM sessions",
 	).all();
 

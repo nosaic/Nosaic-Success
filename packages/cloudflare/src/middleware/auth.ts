@@ -1,17 +1,17 @@
 import type { Context, Next } from "hono";
-import { verifyToken } from "../utils/jwt";
+import { verifyToken } from "@nosaic/core";
 
 /**
  * Authentication middleware - requires valid JWT
  */
-export async function requireAuth(c: Context, next: Next) {
-	const authHeader = c.req.header("Authorization");
+export async function requireAuth(c: Context<{ Bindings: Env; Variables: Variables }>, next: Next): Promise<Response | void> {
+	const authHeader: string | undefined = c.req.header("Authorization");
 
 	if (!authHeader || !authHeader.startsWith("Bearer ")) {
 		return c.json({ error: "Unauthorized" }, 401);
 	}
 
-	const token = authHeader.substring(7);
+	const token: string = authHeader.substring(7);
 	const payload = await verifyToken(token, c.env.JWT_SECRET);
 
 	if (!payload) {

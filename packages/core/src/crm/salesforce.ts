@@ -7,7 +7,7 @@ interface SalesforceConfig {
 }
 
 async function getAccessToken(config: SalesforceConfig): Promise<string> {
-	const response = await fetch(`${config.instanceUrl}/services/oauth2/token`, {
+	const response: Response = await fetch(`${config.instanceUrl}/services/oauth2/token`, {
 		method: "POST",
 		headers: { "Content-Type": "application/x-www-form-urlencoded" },
 		body: new URLSearchParams({
@@ -20,21 +20,21 @@ async function getAccessToken(config: SalesforceConfig): Promise<string> {
 	if (!response.ok)
 		throw new Error(`Salesforce token error: ${response.statusText}`);
 
-	const data = await response.json();
+	const data = await response.json() as { access_token: string };
 	return data.access_token;
 }
 
 export async function fetchSalesforce(
-	configJson: string,
-	env: Env,
+	instanceUrl: string,
+	clientId: string,
+	clientSecret: string,
 ): Promise<CRMCompany[]> {
-	const config: SalesforceConfig = JSON.parse(configJson);
-	const accessToken = await getAccessToken(config);
+	const config: SalesforceConfig = { instanceUrl, clientId, clientSecret };
+	const accessToken: string = await getAccessToken(config);
 
 	// Fetch Accounts
-	const accountsQuery =
-		"SELECT Id, Name, Type, LastActivityDate, Rating FROM Account";
-	const accountsRes = await fetch(
+	const accountsQuery = "SELECT Id, Name, Type, LastActivityDate, Rating FROM Account";
+	const accountsRes: Response = await fetch(
 		`${config.instanceUrl}/services/data/v65.0/query?q=${encodeURIComponent(accountsQuery)}`,
 		{
 			headers: {
@@ -46,7 +46,7 @@ export async function fetchSalesforce(
 
 	if (!accountsRes.ok)
 		throw new Error(`Salesforce Accounts API error: ${accountsRes.statusText}`);
-	const accountsData = await accountsRes.json();
+	const accountsData = await accountsRes.json() as { records: any[] };
 
 	const accounts = accountsData.records.map((acc: any) => ({
 		accountName: acc.Name || null,
@@ -62,14 +62,14 @@ export async function fetchSalesforce(
 	// Fetch Cases
 	const casesQuery =
 		"SELECT Id, AccountId, Subject, Description, CreatedDate, LastModifiedDate, Type, Priority, Status, Reason, IsEscalated, IsClosed, IsDeleted FROM Case";
-	const casesRes = await fetch(
+	const casesRes: Response = await fetch(
 		`${config.instanceUrl}/services/data/v65.0/query?q=${encodeURIComponent(casesQuery)}`,
 		{ headers: { Authorization: `Bearer ${accessToken}` } },
 	);
-	const casesData = await casesRes.json();
+	const casesData = await casesRes.json() as { records: any[] };
 
 	const casesMap = new Map();
-	casesData.records.forEach((c: any) => {
+	casesData.records.forEach((c: any): void => {
 		if (!c.IsClosed && !c.IsDeleted) {
 			if (!casesMap.has(c.AccountId)) casesMap.set(c.AccountId, []);
 			casesMap.get(c.AccountId).push({
@@ -91,14 +91,14 @@ export async function fetchSalesforce(
 	// Fetch Opportunities
 	const oppQuery =
 		"SELECT Id, AccountId, Name, Amount, Type, StageName, Probability, CreatedDate, CloseDate, IsClosed, IsDeleted FROM Opportunity";
-	const oppRes = await fetch(
+	const oppRes: Response = await fetch(
 		`${config.instanceUrl}/services/data/v65.0/query?q=${encodeURIComponent(oppQuery)}`,
 		{ headers: { Authorization: `Bearer ${accessToken}` } },
 	);
-	const oppData = await oppRes.json();
+	const oppData = await oppRes.json() as { records: any[] };
 
 	const oppMap = new Map();
-	oppData.records.forEach((o: any) => {
+	oppData.records.forEach((o: any): void => {
 		if (!o.IsClosed && !o.IsDeleted) {
 			if (!oppMap.has(o.AccountId)) oppMap.set(o.AccountId, []);
 			oppMap.get(o.AccountId).push({
@@ -121,14 +121,14 @@ export async function fetchSalesforce(
 	// Fetch Tasks
 	const taskQuery =
 		"SELECT Id, AccountId, Subject, Description, Status, Priority, CreatedDate, ActivityDate, IsClosed, IsArchived FROM Task";
-	const taskRes = await fetch(
+	const taskRes: Response = await fetch(
 		`${config.instanceUrl}/services/data/v65.0/query?q=${encodeURIComponent(taskQuery)}`,
 		{ headers: { Authorization: `Bearer ${accessToken}` } },
 	);
-	const taskData = await taskRes.json();
+	const taskData = await taskRes.json() as { records: any[] };
 
 	const taskMap = new Map();
-	taskData.records.forEach((t: any) => {
+	taskData.records.forEach((t: any): void => {
 		if (!t.IsClosed && !t.IsArchived) {
 			if (!taskMap.has(t.AccountId)) taskMap.set(t.AccountId, []);
 			taskMap.get(t.AccountId).push({
@@ -147,10 +147,47 @@ export async function fetchSalesforce(
 	});
 
 	// Combine all data
-	return accounts.map((acc: any) => ({
+	return accounts.map((acc: any): any => ({
 		...acc,
 		openCases: casesMap.get(acc.accountId) || null,
 		openOpportunities: oppMap.get(acc.accountId) || null,
 		openTasks: taskMap.get(acc.accountId) || null,
 	}));
+}
+
+// OAuth functions
+export function authorizeSalesforce(clientId: string, redirectUri: string, userId: string): string {
+	const state: string = btoa(JSON.stringify({ userId, provider: "salesforce" }));
+	const params = new URLSearchParams({
+		client_id: clientId,
+		redirect_uri: `${redirectUri}/oauth/salesforce/callback`,
+		response_type: "code",
+		state,
+	});
+	return `https://login.salesforce.com/services/oauth2/authorize?${params}`;
+}
+
+export async function callbackSalesforce(code: string, clientId: string, clientSecret: string, redirectUri: string):
+    Promise<{ instanceUrl: string; clientId: string; clientSecret: string }> {
+	const tokenResponse: Response = await fetch(
+		"https://login.salesforce.com/services/oauth2/token",
+		{
+			method: "POST",
+			headers: { "Content-Type": "application/x-www-form-urlencoded" },
+			body: new URLSearchParams({
+				code,
+				client_id: clientId,
+				client_secret: clientSecret,
+				redirect_uri: `${redirectUri}/oauth/salesforce/callback`,
+				grant_type: "authorization_code",
+			}),
+		},
+	);
+
+	if (!tokenResponse.ok) {
+		throw new Error(`Salesforce OAuth error: ${tokenResponse.statusText}`);
+	}
+
+	const tokens = await tokenResponse.json() as { instance_url: string };
+	return { instanceUrl: tokens.instance_url, clientId, clientSecret };
 }

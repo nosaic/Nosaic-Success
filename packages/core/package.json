@@ -1,0 +1,15 @@
+{
+	"name": "@nosaic-success/core",
+	"description": "Core business logic for Nosaic Success",
+	"version": "1.0.0",
+	"type": "module",
+	"main": "src/index.ts",
+	"scripts": {
+		"build": "tsc",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@noble/hashes": "^2.0.1",
+		"jose": "^6.1.2"
+	}
+}

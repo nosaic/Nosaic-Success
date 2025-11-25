@@ -1,21 +1,17 @@
 {
-	"name": "nosaic-success-api",
-	"description": "Nosaic Success API",
-	"version": "1.0.0",
-	"type": "module",
-	"main": "src/index.js",
-	"scripts": {
-		"build": "tsc",
-		"deploy": "npx wrangler deploy"
-	},
-	"devDependencies": {
-		"@cloudflare/workers-types": "^4.20251121.0",
-		"typescript": "^5.9.3",
-		"wrangler": "^4.50.0"
-	},
-	"dependencies": {
-		"@noble/hashes": "^2.0.1",
-		"hono": "^4.10.6",
-		"jose": "^6.1.2"
-	}
+  "name": "nosaic-success-api",
+  "description": "Nosaic Success API",
+  "version": "1.0.0",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "typecheck": "npm run typecheck --workspaces",
+    "build": "npm run build --workspaces",
+    "deployCloud": "npm run deploy --workspace=@nosaic-success/cloudflare"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
 }

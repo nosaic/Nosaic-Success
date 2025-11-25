@@ -1,10 +1,8 @@
-import { decrypt } from "./utils/crypto";
-
 export async function handleScheduled(env: Env): Promise<void> {
-	const now = Date.now();
+	const now: number = Date.now();
 
 	// Get workflows that need to run
-	const configs = await env.DB.prepare(
+	const configs: D1Result<Record<string, unknown>> = await env.DB.prepare(
 		"SELECT * FROM workflow_configs WHERE enabled = 1 AND next_run_at <= ?",
 	)
 		.bind(now)
@@ -15,7 +13,7 @@ export async function handleScheduled(env: Env): Promise<void> {
 	for (const config of configs.results as any[]) {
 		try {
 			// Get OAuth connections for this user
-			const connections = await env.DB.prepare(
+			const connections: D1Result<Record<string, unknown>> = await env.DB.prepare(
 				"SELECT * FROM oauth_connections WHERE user_id = ?",
 			)
 				.bind(config.user_id)
@@ -27,20 +25,20 @@ export async function handleScheduled(env: Env): Promise<void> {
 			}
 
 			// Get support connection
-			const supportConn = connMap.get(config.support_provider);
+			const supportConn: any = connMap.get(config.support_provider);
 			if (!supportConn) {
 				console.error(`No support connection for user ${config.user_id}`);
 				continue;
 			}
 
-			const supportMetadata = supportConn.scope
+			const supportMetadata: any = supportConn.scope
 				? JSON.parse(supportConn.scope)
 				: {};
 
 			// Get CRM connection (optional)
-			let crmMetadata = null;
+			let crmMetadata: any = null;
 			if (config.crm_provider && config.crm_provider !== "none") {
-				const crmConn = connMap.get(config.crm_provider);
+				const crmConn: any = connMap.get(config.crm_provider);
 				if (crmConn) {
 					crmMetadata = crmConn.scope ? JSON.parse(crmConn.scope) : {};
 				}
@@ -60,7 +58,7 @@ export async function handleScheduled(env: Env): Promise<void> {
 			});
 
 			// Calculate and update next run
-			const nextRun = calculateNextRun(config.report_frequency, now);
+			const nextRun: number = calculateNextRun(config.report_frequency, now);
 			await env.DB.prepare(
 				"UPDATE workflow_configs SET next_run_at = ? WHERE user_id = ?",
 			)
