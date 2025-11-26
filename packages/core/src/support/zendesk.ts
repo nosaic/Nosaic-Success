@@ -1,4 +1,4 @@
-import type { SupportCustomer } from "./index";
+import type {SupportCustomer} from "./index";
 
 interface ZendeskConfig {
 	subdomain: string;
@@ -73,59 +73,57 @@ export async function fetchZendesk(
 		companyLookup[org.id] = org.name;
 	});
 
-	const output = Object.entries(grouped).map(([companyId, orgTickets]: any) => {
-		const openTicketsList: any = orgTickets.filter(
-			(t: any): boolean => t.status === "open" || t.status === "pending",
-		);
-		const solvedTicketsList: any = orgTickets.filter(
-			(t: any): boolean => t.status === "solved",
-		);
+    return Object.entries(grouped).map(([companyId, orgTickets]: any) => {
+        const openTicketsList: any = orgTickets.filter(
+            (t: any): boolean => t.status === "open" || t.status === "pending",
+        );
+        const solvedTicketsList: any = orgTickets.filter(
+            (t: any): boolean => t.status === "solved",
+        );
 
-		const priorityCounts = { low: 0, normal: 0, high: 0, urgent: 0 };
-		openTicketsList.forEach((t: any): void => {
-			const priority: any = t.priority || "normal";
-			if (priorityCounts[priority as keyof typeof priorityCounts] != null) {
-				priorityCounts[priority as keyof typeof priorityCounts]++;
-			}
-		});
+        const priorityCounts = {low: 0, normal: 0, high: 0, urgent: 0};
+        openTicketsList.forEach((t: any): void => {
+            const priority: any = t.priority || "normal";
+            if (priorityCounts[priority as keyof typeof priorityCounts] != null) {
+                priorityCounts[priority as keyof typeof priorityCounts]++;
+            }
+        });
 
-		const csatScores: any = solvedTicketsList
-			.map(csatScore)
-			.filter((s: any): boolean => s != null);
-		const avgCsat: number | null =
-			csatScores.length > 0
-				? csatScores.reduce((a: number, b: number): number => a + b, 0) / csatScores.length
-				: null;
+        const csatScores: any = solvedTicketsList
+            .map(csatScore)
+            .filter((s: any): boolean => s != null);
+        const avgCsat: number | null =
+            csatScores.length > 0
+                ? csatScores.reduce((a: number, b: number): number => a + b, 0) / csatScores.length
+                : null;
 
-		const filteredTickets: any = openTicketsList.map((t: any) => ({
-			ticketSubject: t.subject,
-			ticketId: t.id,
-			ticketType: t.type,
-			ticketStatus: t.status,
-			ticketPriority: t.priority,
-			ticketCreatedAt: t.created_at,
-			ticketUpdatedAt: t.updated_at,
-			ticketAgeHours: Math.round(
-				(Date.now() - new Date(t.created_at).getTime()) / (1000 * 60 * 60),
-			),
-			ticketDueAt: t.due_at,
-			ticketTags: t.tags,
-		}));
+        const filteredTickets: any = openTicketsList.map((t: any) => ({
+            ticketSubject: t.subject,
+            ticketId: t.id,
+            ticketType: t.type,
+            ticketStatus: t.status,
+            ticketPriority: t.priority,
+            ticketCreatedAt: t.created_at,
+            ticketUpdatedAt: t.updated_at,
+            ticketAgeHours: Math.round(
+                (Date.now() - new Date(t.created_at).getTime()) / (1000 * 60 * 60),
+            ),
+            ticketDueAt: t.due_at,
+            ticketTags: t.tags,
+        }));
 
-		return {
-			id: companyId,
-			name: companyLookup[companyId] || "Unknown Company",
-			email: "",
-			domain: undefined,
-			ticketCount: orgTickets.length,
-			openTickets: openTicketsList.length,
-			avgCsat: avgCsat ?? undefined,
-			openTicketPriority: priorityCounts,
-			tickets: filteredTickets,
-		};
-	});
-
-	return output;
+        return {
+            id: companyId,
+            name: companyLookup[companyId] || "Unknown Company",
+            email: "",
+            domain: undefined,
+            ticketCount: orgTickets.length,
+            openTickets: openTicketsList.length,
+            avgCsat: avgCsat ?? undefined,
+            openTicketPriority: priorityCounts,
+            tickets: filteredTickets,
+        };
+    });
 }
 
 // OAuth functions

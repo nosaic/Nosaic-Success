@@ -1,5 +1,5 @@
 import type { Context, Next } from "hono";
-import { verifyToken } from "@nosaic/core";
+import { verifyToken, type JWTPayload } from "@nosaic/core";
 
 /**
  * Authentication middleware - requires valid JWT
@@ -12,7 +12,7 @@ export async function requireAuth(c: Context<{ Bindings: Env; Variables: Variabl
 	}
 
 	const token: string = authHeader.substring(7);
-	const payload = await verifyToken(token, c.env.JWT_SECRET);
+	const payload: JWTPayload | null = await verifyToken(token, c.env.JWT_SECRET);
 
 	if (!payload) {
 		return c.json({ error: "Invalid or expired token" }, 401);

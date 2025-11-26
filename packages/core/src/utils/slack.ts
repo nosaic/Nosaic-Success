@@ -2,7 +2,7 @@ export async function sendSlack(
 	content: string,
 	webhookUrl: string,
 ): Promise<void> {
-	const response = await fetch(webhookUrl, {
+	const response: Response = await fetch(webhookUrl, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",

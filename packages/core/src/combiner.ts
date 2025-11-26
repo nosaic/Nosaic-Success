@@ -1,5 +1,5 @@
-import type { CRMCompany } from "./crm/index";
-import type { SupportCustomer } from "./support/index";
+import type { CRMCompany } from "./crm";
+import type { SupportCustomer } from "./support";
 
 export interface CombinedCompany {
 	companyName: string;
@@ -31,29 +31,29 @@ export function combineData(
 	const supportLookup = new Map<string, SupportCustomer>();
 
 	if (crmData) {
-		crmData.forEach((company) => {
-			const key = normalizeName(company.companyName);
+		crmData.forEach((company: CRMCompany): void => {
+			const key: string = normalizeName(company.companyName);
 			if (key) crmLookup.set(key, company);
 		});
 	}
 
-	supportData.forEach((customer) => {
-		const key = normalizeName(customer.name);
+	supportData.forEach((customer: SupportCustomer): void => {
+		const key: string = normalizeName(customer.name);
 		if (key) supportLookup.set(key, customer);
 	});
 
 	// Get all unique company names
 	const allNames = new Set([
-		...supportData.map((s) => s.name),
-		...(crmData || []).map((c) => c.companyName),
+		...supportData.map((s: SupportCustomer): string => s.name),
+		...(crmData || []).map((c: CRMCompany): string => c.companyName),
 	]);
 
 	const unifiedCompanies: CombinedCompany[] = [];
 
-	allNames.forEach((companyName) => {
-		const normalized = normalizeName(companyName);
-		const crmCompany = crmLookup.get(normalized);
-		const supportCompany = supportLookup.get(normalized);
+	allNames.forEach((companyName: string): void => {
+		const normalized: string = normalizeName(companyName);
+		const crmCompany: CRMCompany | undefined = crmLookup.get(normalized);
+		const supportCompany: SupportCustomer | undefined = supportLookup.get(normalized);
 
 		unifiedCompanies.push({
 			companyName,

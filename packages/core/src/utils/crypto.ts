@@ -1,12 +1,13 @@
 import { argon2id } from "@noble/hashes/argon2.js";
 import { randomBytes } from "@noble/hashes/utils.js";
+import type {CryptoKey} from "jose";
 
 /**
  * Hash password with Argon2id
  */
 export async function hashPassword(password: string): Promise<string> {
-	const salt = randomBytes(16);
-	const hash = argon2id(password, salt, {
+	const salt: Uint8Array<ArrayBufferLike> = randomBytes(16);
+	const hash: Uint8Array<ArrayBufferLike> = argon2id(password, salt, {
 		m: 65536, // 64 MB
 		t: 3, // 3 iterations
 		p: 4, // 4 parallelism
@@ -28,13 +29,13 @@ export async function verifyPassword(
 	hashedPassword: string,
 ): Promise<boolean> {
 	try {
-		const combined = Uint8Array.from(atob(hashedPassword), (c) =>
+		const combined: Uint8Array<ArrayBuffer> = Uint8Array.from(atob(hashedPassword), (c: string): number =>
 			c.charCodeAt(0),
 		);
-		const salt = combined.slice(0, 16);
-		const storedHash = combined.slice(16);
+		const salt: Uint8Array<ArrayBuffer> = combined.slice(0, 16);
+		const storedHash: Uint8Array<ArrayBuffer> = combined.slice(16);
 
-		const hash = argon2id(password, salt, {
+		const hash: Uint8Array<ArrayBufferLike> = argon2id(password, salt, {
 			m: 65536,
 			t: 3,
 			p: 4,
@@ -42,8 +43,8 @@ export async function verifyPassword(
 
 		// Constant-time comparison
 		if (hash.length !== storedHash.length) return false;
-		let diff = 0;
-		for (let i = 0; i < hash.length; i++) {
+		let diff: number = 0;
+		for (let i: number = 0; i < hash.length; i++) {
 			diff |= (hash[i] ?? 0) ^ (storedHash[i] ?? 0);
 		}
 		return diff === 0;
@@ -56,7 +57,7 @@ export async function verifyPassword(
  * Encrypt data with AES-256-GCM
  */
 export async function encrypt(data: string, keyHex: string): Promise<string> {
-	const key = await crypto.subtle.importKey(
+	const key: CryptoKey = await crypto.subtle.importKey(
 		"raw",
 		hexToBytes(keyHex) as BufferSource,
 		{ name: "AES-GCM" },
@@ -64,10 +65,10 @@ export async function encrypt(data: string, keyHex: string): Promise<string> {
 		["encrypt"],
 	);
 
-	const iv = crypto.getRandomValues(new Uint8Array(12));
-	const encoded = new TextEncoder().encode(data);
+	const iv: Uint8Array<ArrayBuffer> = crypto.getRandomValues(new Uint8Array(12));
+	const encoded: Uint8Array<ArrayBuffer> = new TextEncoder().encode(data);
 
-	const encrypted = await crypto.subtle.encrypt(
+	const encrypted: ArrayBuffer = await crypto.subtle.encrypt(
 		{ name: "AES-GCM", iv },
 		key,
 		encoded,
@@ -88,7 +89,7 @@ export async function decrypt(
 	encryptedData: string,
 	keyHex: string,
 ): Promise<string> {
-	const key = await crypto.subtle.importKey(
+	const key: CryptoKey = await crypto.subtle.importKey(
 		"raw",
 		hexToBytes(keyHex) as BufferSource,
 		{ name: "AES-GCM" },
@@ -96,11 +97,11 @@ export async function decrypt(
 		["decrypt"],
 	);
 
-	const combined = Uint8Array.from(atob(encryptedData), (c) => c.charCodeAt(0));
-	const iv = combined.slice(0, 12);
-	const encrypted = combined.slice(12);
+	const combined: Uint8Array<ArrayBuffer> = Uint8Array.from(atob(encryptedData), (c: string): number => c.charCodeAt(0));
+	const iv: Uint8Array<ArrayBuffer> = combined.slice(0, 12);
+	const encrypted: Uint8Array<ArrayBuffer> = combined.slice(12);
 
-	const decrypted = await crypto.subtle.decrypt(
+	const decrypted: ArrayBuffer = await crypto.subtle.decrypt(
 		{ name: "AES-GCM", iv },
 		key,
 		encrypted,
@@ -113,9 +114,9 @@ export async function decrypt(
  * Generate random ID
  */
 export function generateId(prefix: string): string {
-	const bytes = randomBytes(16);
-	const hex = Array.from(bytes)
-		.map((b: number) => b.toString(16).padStart(2, "0"))
+	const bytes: Uint8Array<ArrayBufferLike> = randomBytes(16);
+	const hex: string = Array.from(bytes)
+		.map((b: number): string => b.toString(16).padStart(2, "0"))
 		.join("");
 	return `${prefix}_${hex}`;
 }
@@ -124,13 +125,13 @@ export function generateId(prefix: string): string {
  * Generate random token
  */
 export function generateToken(): string {
-	const bytes = randomBytes(32);
+	const bytes: Uint8Array<ArrayBufferLike> = randomBytes(32);
 	return btoa(String.fromCharCode(...bytes));
 }
 
 function hexToBytes(hex: string): Uint8Array {
 	const bytes = new Uint8Array(hex.length / 2);
-	for (let i = 0; i < hex.length; i += 2) {
+	for (let i: number = 0; i < hex.length; i += 2) {
 		bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
 	}
 	return bytes;

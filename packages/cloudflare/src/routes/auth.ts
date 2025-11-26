@@ -27,7 +27,7 @@ auth.post("/register", async (c): Promise<Response> => {
 	}
 
 	// Check if user exists
-	const existing = await c.env.DB.prepare(
+	const existing: Record<string, unknown> | null = await c.env.DB.prepare(
 		"SELECT id FROM users WHERE email = ?",
 	)
 		.bind(email)
@@ -38,9 +38,9 @@ auth.post("/register", async (c): Promise<Response> => {
 	}
 
 	// Create user
-	const userId = generateId("usr");
-	const passwordHash = await hashPassword(password);
-	const verificationToken = generateToken();
+	const userId: string = generateId("usr");
+	const passwordHash: string = await hashPassword(password);
+	const verificationToken: string = generateToken();
 
 	await c.env.DB.prepare(
 		`INSERT INTO users (id, email, password_hash, verification_token, email_verified, created_at, updated_at)

@@ -24,7 +24,7 @@ Generate a report in markdown format with:
 
 Be specific and data-driven. Focus on actionable insights.`;
 
-	const response = await fetch(
+	const response: Response = await fetch(
 		"https://openrouter.ai/api/v1/chat/completions",
 		{
 			method: "POST",

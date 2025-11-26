@@ -3,7 +3,7 @@ export async function sendEmail(
 	to: string,
 	apiKey: string,
 ): Promise<void> {
-	const response = await fetch("https://api.resend.com/emails", {
+	const response: Response = await fetch("https://api.resend.com/emails", {
 		method: "POST",
 		headers: {
 			Authorization: `Bearer ${apiKey}`,

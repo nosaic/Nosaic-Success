@@ -1,6 +1,6 @@
 import * as jose from "jose";
 
-interface JWTPayload {
+export interface JWTPayload {
 	userId: string;
 	email: string;
 	iat?: number;
@@ -14,7 +14,7 @@ export async function signAccessToken(
 	payload: { userId: string; email: string },
 	secret: string,
 ): Promise<string> {
-	const secretKey = new TextEncoder().encode(secret);
+	const secretKey: Uint8Array<ArrayBuffer> = new TextEncoder().encode(secret);
 
 	return await new jose.SignJWT({
 		userId: payload.userId,
@@ -34,7 +34,7 @@ export async function verifyToken(
 	secret: string,
 ): Promise<JWTPayload | null> {
 	try {
-		const secretKey = new TextEncoder().encode(secret);
+		const secretKey: Uint8Array<ArrayBuffer> = new TextEncoder().encode(secret);
 		const { payload } = await jose.jwtVerify(token, secretKey);
 
 		return {
