@@ -1,4 +1,4 @@
-import type { CRMCompany } from "./index";
+import type { StandardizedCRMCompany } from "../standardized-schemas";
 
 interface HubSpotConfig {
 	clientId: string;
@@ -26,7 +26,7 @@ async function getAccessToken(config: HubSpotConfig): Promise<string> {
 export async function fetchHubSpot(
 	clientId: string,
 	clientSecret: string,
-): Promise<CRMCompany[]> {
+): Promise<StandardizedCRMCompany[]> {
 	const config: HubSpotConfig = { clientId, clientSecret };
 	const accessToken: string = await getAccessToken(config);
 
@@ -66,30 +66,26 @@ export async function fetchHubSpot(
 		return new Date(Number(unixTime)).toISOString();
 	}
 
-	return data.results.map((company: any) => ({
-		companyName: company.properties?.name || null,
-		companyId: company.id || null,
-		ownerId: company.properties?.hubspot_owner_id || null,
+	return data.results.map((company: any): StandardizedCRMCompany => ({
+		companyName: company.properties?.name || "",
+		companyId: String(company.id || ""),
+		ownerId: company.properties?.hubspot_owner_id ? String(company.properties.hubspot_owner_id) : undefined,
 		ownerAssignedDate: getDateFromUnixTime(
 			company.properties?.hubspot_owner_assigneddate || null,
-		),
-		lifecycleStage: company.properties?.lifecyclestage || null,
-		companyCloseDate: getDateFromUnixTime(
-			company.properties?.closedate || null,
-		),
-		lastUpdated: getDateFromUnixTime(
-			company.properties?.notes_last_updated || null,
-		),
-		lastContacted: getDateFromUnixTime(
-			company.properties?.notes_last_contacted || null,
-		),
-		numberOfOpenDeals: Number(company.properties?.hs_num_open_deals || 0),
+		) || undefined,
+		lifecycleStage: company.properties?.lifecyclestage || undefined,
+		totalRevenue: Number(company.properties?.total_revenue || 0) || undefined,
+		numberOfOpenDeals: Number(company.properties?.hs_num_open_deals || 0) || undefined,
+		recentDealAmount: Number(company.properties?.recent_deal_amount || 0) || undefined,
 		recentDealCloseDate: getDateFromUnixTime(
 			company.properties?.recent_deal_close_date || null,
-		),
-		recentDealAmount: Number(company.properties?.recent_deal_amount || 0),
-		totalRevenue: Number(company.properties?.total_revenue || 0),
-		CSMSentiment: company.properties?.hs_csm_sentiment || null,
+		) || undefined,
+		csmSentiment: company.properties?.hs_csm_sentiment || undefined,
+		platformSpecificData: {
+			companyCloseDate: getDateFromUnixTime(company.properties?.closedate || null),
+			lastUpdated: getDateFromUnixTime(company.properties?.notes_last_updated || null),
+			lastContacted: getDateFromUnixTime(company.properties?.notes_last_contacted || null),
+		},
 	}));
 }
 

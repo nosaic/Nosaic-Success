@@ -1,4 +1,4 @@
-import type { SupportCustomer } from "./index";
+import type { StandardizedSupportCustomer } from "../standardized-schemas";
 
 interface IntercomConfig {
 	clientId: string;
@@ -24,7 +24,7 @@ async function getAccessToken(config: IntercomConfig): Promise<string> {
 
 export async function fetchIntercom(
 	configJson: string,
-): Promise<SupportCustomer[]> {
+): Promise<StandardizedSupportCustomer[]> {
 	const config: IntercomConfig = JSON.parse(configJson);
 	const accessToken: string = await getAccessToken(config);
 
@@ -71,7 +71,7 @@ export async function fetchIntercom(
 
 			grouped[companyId].tickets.push({
 				ticketTitle: ticket.ticket_attributes?._default_title_,
-				ticketId: ticket.id,
+				ticketId: String(ticket.id),
 				ticketState: ticket.ticket_state?.category || null,
 				ticketCreatedAt: Number(ticket.created_at),
 				ticketUpdatedAt: Number(ticket.updated_at),
@@ -100,11 +100,9 @@ export async function fetchIntercom(
 		});
 	}
 
-	return Object.values(grouped).map((company: any) => ({
-		id: company.companyId,
+	return Object.values(grouped).map((company: any): StandardizedSupportCustomer => ({
+		id: String(company.companyId),
 		name: companyMap[company.companyId] || "Unknown Company",
-		email: "",
-		domain: undefined,
 		ticketCount: company.tickets.length,
 		openTickets: company.openTicketCount,
 		tickets: company.tickets,

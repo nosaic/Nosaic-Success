@@ -1,7 +1,7 @@
-import type { CombinedCompany } from "./combiner";
+import type { StandardizedCombinedCompany } from "./standardized-schemas";
 
 export async function generateChurnReport(
-	companies: CombinedCompany[],
+	companies: StandardizedCombinedCompany[],
 	openrouterApiKey: string,
 ): Promise<string> {
 	const prompt = `You are a customer success analyst. Analyze the following customer data and generate a churn risk report.

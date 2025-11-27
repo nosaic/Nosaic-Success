@@ -1,26 +1,12 @@
 import { fetchZendesk } from "./zendesk";
 import { fetchIntercom } from "./intercom";
 import { fetchFreshdesk } from "./freshdesk";
-
-export interface SupportCustomer {
-	id: string;
-	name: string;
-	email: string;
-	domain?: string | undefined;
-	ticketCount: number;
-	openTickets: number;
-	avgCsat?: number;
-	healthScore?: number;
-	accountTier?: string;
-	renewalDate?: string;
-	openTicketPriority?: any;
-	tickets?: any[];
-}
+import type { StandardizedSupportCustomer } from "../standardized-schemas";
 
 export async function fetchSupport(
 	provider: string,
 	credentials: string,
-): Promise<SupportCustomer[]> {
+): Promise<StandardizedSupportCustomer[]> {
 	switch (provider) {
 		case "zendesk":
 			return await fetchZendesk(credentials);

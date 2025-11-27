@@ -1,4 +1,4 @@
-import type {SupportCustomer} from "./index";
+import type { StandardizedSupportCustomer } from "../standardized-schemas";
 
 interface ZendeskConfig {
 	subdomain: string;
@@ -30,7 +30,7 @@ async function getAccessToken(config: ZendeskConfig): Promise<string> {
 
 export async function fetchZendesk(
 	configJson: string,
-): Promise<SupportCustomer[]> {
+): Promise<StandardizedSupportCustomer[]> {
 	const config: ZendeskConfig = JSON.parse(configJson);
 	const accessToken: string = await getAccessToken(config);
 
@@ -81,11 +81,12 @@ export async function fetchZendesk(
             (t: any): boolean => t.status === "solved",
         );
 
-        const priorityCounts = {low: 0, normal: 0, high: 0, urgent: 0};
+        const priorityCounts = {low: 0, medium: 0, high: 0, urgent: 0};
         openTicketsList.forEach((t: any): void => {
             const priority: any = t.priority || "normal";
-            if (priorityCounts[priority as keyof typeof priorityCounts] != null) {
-                priorityCounts[priority as keyof typeof priorityCounts]++;
+            const mappedPriority = priority === "normal" ? "medium" : priority;
+            if (priorityCounts[mappedPriority as keyof typeof priorityCounts] != null) {
+                priorityCounts[mappedPriority as keyof typeof priorityCounts]++;
             }
         });
 
@@ -99,7 +100,7 @@ export async function fetchZendesk(
 
         const filteredTickets: any = openTicketsList.map((t: any) => ({
             ticketSubject: t.subject,
-            ticketId: t.id,
+            ticketId: String(t.id),
             ticketType: t.type,
             ticketStatus: t.status,
             ticketPriority: t.priority,
@@ -113,14 +114,12 @@ export async function fetchZendesk(
         }));
 
         return {
-            id: companyId,
+            id: String(companyId),
             name: companyLookup[companyId] || "Unknown Company",
-            email: "",
-            domain: undefined,
             ticketCount: orgTickets.length,
             openTickets: openTicketsList.length,
-            avgCsat: avgCsat ?? undefined,
-            openTicketPriority: priorityCounts,
+            avgCsat: avgCsat || undefined,
+            openTicketPriorities: priorityCounts,
             tickets: filteredTickets,
         };
     });

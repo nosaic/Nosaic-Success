@@ -1,7 +1,8 @@
 // Core business logic exports
-export { fetchCRM, type CRMCompany } from "./crm/index";
-export { fetchSupport, type SupportCustomer } from "./support/index";
-export { combineData, type CombinedCompany } from "./combiner";
+export { fetchCRM } from "./crm/index";
+export { fetchSupport } from "./support/index";
+export { combineData } from "./combiner";
+export type { StandardizedCRMCompany, StandardizedSupportCustomer, StandardizedCombinedCompany } from "./standardized-schemas";
 export { generateChurnReport } from "./ai-report";
 
 // OAuth exports

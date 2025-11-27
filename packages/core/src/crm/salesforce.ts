@@ -1,4 +1,4 @@
-import type { CRMCompany } from "./index";
+import type { StandardizedCRMCompany } from "../standardized-schemas";
 
 interface SalesforceConfig {
 	instanceUrl: string;
@@ -28,7 +28,7 @@ export async function fetchSalesforce(
 	instanceUrl: string,
 	clientId: string,
 	clientSecret: string,
-): Promise<CRMCompany[]> {
+): Promise<StandardizedCRMCompany[]> {
 	const config: SalesforceConfig = { instanceUrl, clientId, clientSecret };
 	const accessToken: string = await getAccessToken(config);
 
@@ -50,7 +50,7 @@ export async function fetchSalesforce(
 
 	const accounts = accountsData.records.map((acc: any) => ({
 		accountName: acc.Name || null,
-		accountId: acc.Id || null,
+		accountId: String(acc.Id || ""),
 		accountType: acc.Type || null,
 		lastActivityDate: acc.LastActivityDate || null,
 		prospectRating: acc.Rating || null,
@@ -74,7 +74,7 @@ export async function fetchSalesforce(
 			if (!casesMap.has(c.AccountId)) casesMap.set(c.AccountId, []);
 			casesMap.get(c.AccountId).push({
 				caseSubject: c.Subject,
-				caseId: c.Id,
+				caseId: String(c.Id),
 				caseType: c.Type,
 				caseStatus: c.Status,
 				casePriority: c.Priority,
@@ -102,7 +102,7 @@ export async function fetchSalesforce(
 		if (!o.IsClosed && !o.IsDeleted) {
 			if (!oppMap.has(o.AccountId)) oppMap.set(o.AccountId, []);
 			oppMap.get(o.AccountId).push({
-				opportunityId: o.Id,
+				opportunityId: String(o.Id),
 				name: o.Name,
 				amount: o.Amount,
 				type: o.Type,
@@ -134,7 +134,7 @@ export async function fetchSalesforce(
 			taskMap.get(t.AccountId).push({
 				subject: t.Subject || null,
 				description: t.Description || null,
-				taskId: t.Id,
+				taskId: String(t.Id),
 				status: t.Status,
 				priority: t.Priority,
 				createdDate: t.CreatedDate,
@@ -147,11 +147,17 @@ export async function fetchSalesforce(
 	});
 
 	// Combine all data
-	return accounts.map((acc: any): any => ({
-		...acc,
-		openCases: casesMap.get(acc.accountId) || null,
-		openOpportunities: oppMap.get(acc.accountId) || null,
-		openTasks: taskMap.get(acc.accountId) || null,
+	return accounts.map((acc: any): StandardizedCRMCompany => ({
+		companyName: acc.accountName || "",
+		companyId: String(acc.accountId || ""),
+		lastActivityDate: acc.lastActivityDate || undefined,
+		prospectRating: acc.prospectRating || undefined,
+		openCases: casesMap.get(acc.accountId) || undefined,
+		openOpportunities: oppMap.get(acc.accountId) || undefined,
+		openTasks: taskMap.get(acc.accountId) || undefined,
+		platformSpecificData: {
+			accountType: acc.accountType,
+		},
 	}));
 }
 

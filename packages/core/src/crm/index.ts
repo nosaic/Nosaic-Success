@@ -1,16 +1,11 @@
 import { fetchHubSpot } from "./hubspot";
 import { fetchSalesforce } from "./salesforce";
-
-export interface CRMCompany {
-	companyName: string;
-	companyId: string;
-	[key: string]: any;
-}
+import type { StandardizedCRMCompany } from "../standardized-schemas";
 
 export async function fetchCRM(
 	provider: string,
 	credentials: string,
-): Promise<CRMCompany[]> {
+): Promise<StandardizedCRMCompany[]> {
 	const creds: any = JSON.parse(credentials);
 	switch (provider) {
 		case "hubspot":

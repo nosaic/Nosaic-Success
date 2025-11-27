@@ -1,11 +1,6 @@
-import type { CRMCompany } from "./crm";
-import type { SupportCustomer } from "./support";
-
-export interface CombinedCompany {
-	companyName: string;
-	CRMData: (CRMCompany & { CRMDataSource: string }) | null;
-	supportData: (SupportCustomer & { supportDataSource: string }) | null;
-}
+import type { StandardizedCRMCompany } from "./standardized-schemas";
+import type { StandardizedSupportCustomer } from "./standardized-schemas";
+import type { StandardizedCombinedCompany } from "./standardized-schemas";
 
 function normalizeName(name: string): string {
 	if (!name) return "";
@@ -21,39 +16,39 @@ function normalizeName(name: string): string {
 }
 
 export function combineData(
-	crmData: CRMCompany[] | null,
-	supportData: SupportCustomer[],
+	crmData: StandardizedCRMCompany[] | null,
+	supportData: StandardizedSupportCustomer[],
 	crmSource: string,
 	supportSource: string,
-): CombinedCompany[] {
+): StandardizedCombinedCompany[] {
 	// Create lookups
-	const crmLookup = new Map<string, CRMCompany>();
-	const supportLookup = new Map<string, SupportCustomer>();
+	const crmLookup = new Map<string, StandardizedCRMCompany>();
+	const supportLookup = new Map<string, StandardizedSupportCustomer>();
 
 	if (crmData) {
-		crmData.forEach((company: CRMCompany): void => {
+		crmData.forEach((company: StandardizedCRMCompany): void => {
 			const key: string = normalizeName(company.companyName);
 			if (key) crmLookup.set(key, company);
 		});
 	}
 
-	supportData.forEach((customer: SupportCustomer): void => {
+	supportData.forEach((customer: StandardizedSupportCustomer): void => {
 		const key: string = normalizeName(customer.name);
 		if (key) supportLookup.set(key, customer);
 	});
 
 	// Get all unique company names
 	const allNames = new Set([
-		...supportData.map((s: SupportCustomer): string => s.name),
-		...(crmData || []).map((c: CRMCompany): string => c.companyName),
+		...supportData.map((s: StandardizedSupportCustomer): string => s.name),
+		...(crmData || []).map((c: StandardizedCRMCompany): string => c.companyName),
 	]);
 
-	const unifiedCompanies: CombinedCompany[] = [];
+	const unifiedCompanies: StandardizedCombinedCompany[] = [];
 
 	allNames.forEach((companyName: string): void => {
 		const normalized: string = normalizeName(companyName);
-		const crmCompany: CRMCompany | undefined = crmLookup.get(normalized);
-		const supportCompany: SupportCustomer | undefined = supportLookup.get(normalized);
+		const crmCompany: StandardizedCRMCompany | undefined = crmLookup.get(normalized);
+		const supportCompany: StandardizedSupportCustomer | undefined = supportLookup.get(normalized);
 
 		unifiedCompanies.push({
 			companyName,

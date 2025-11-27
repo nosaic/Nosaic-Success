@@ -1,4 +1,4 @@
-import type { SupportCustomer } from "./index";
+import type { StandardizedSupportCustomer } from "../standardized-schemas";
 
 interface FreshdeskConfig {
 	subdomain: string;
@@ -43,7 +43,7 @@ async function getAccessToken(config: FreshdeskConfig): Promise<string> {
 
 export async function fetchFreshdesk(
 	configJson: string,
-): Promise<SupportCustomer[]> {
+): Promise<StandardizedSupportCustomer[]> {
 	const config: FreshdeskConfig = JSON.parse(configJson);
 	const accessToken: string = await getAccessToken(config);
 
@@ -68,7 +68,7 @@ export async function fetchFreshdesk(
 
 		const cleanedTicket = {
 			ticketSubject: t.subject,
-			ticketId: t.id,
+			ticketId: String(t.id),
 			ticketType: t.type,
 			ticketStatus: STATUS_MAP[t.status] || t.status,
 			ticketPriority: PRIORITY_MAP[t.priority] || t.priority,
@@ -121,18 +121,16 @@ export async function fetchFreshdesk(
 		};
 	});
 
-	return Object.values(groupedData).map((companyEntry: any) => {
+	return Object.values(groupedData).map((companyEntry: any): StandardizedSupportCustomer => {
 		const details: any = companyMap[companyEntry.companyId] || {};
 		return {
-			id: companyEntry.companyId,
+			id: String(companyEntry.companyId),
 			name: details.companyName || "Unknown Company",
-			email: "",
-			domain: undefined,
 			ticketCount: companyEntry.tickets.length,
 			openTickets: companyEntry.openTicketsCount,
-			healthScore: details.healthScore,
-			accountTier: details.accountTier,
-			renewalDate: details.renewalDate,
+			healthScore: details.healthScore || undefined,
+			accountTier: details.accountTier || undefined,
+			renewalDate: details.renewalDate || undefined,
 			openTicketPriorities: companyEntry.openTicketPriorities,
 			tickets: companyEntry.tickets,
 		};
