@@ -1,19 +1,23 @@
-import { fetchZendesk } from "./zendesk";
-import { fetchIntercom } from "./intercom";
-import { fetchFreshdesk } from "./freshdesk";
+import { ZendeskSupport } from "./zendesk";
+import { IntercomSupport } from "./intercom";
+import { FreshdeskSupport } from "./freshdesk";
 import type { StandardizedSupportCustomer } from "../standardized-schemas";
 
 export async function fetchSupport(
 	provider: string,
 	credentials: string,
 ): Promise<StandardizedSupportCustomer[]> {
+	const creds: any = JSON.parse(credentials);
 	switch (provider) {
 		case "zendesk":
-			return await fetchZendesk(credentials);
+			const zendesk = new ZendeskSupport(creds.subdomain, creds.clientId, creds.clientSecret);
+			return await zendesk.fetchCustomers();
 		case "intercom":
-			return await fetchIntercom(credentials);
+			const intercom = new IntercomSupport(creds.clientId, creds.clientSecret);
+			return await intercom.fetchCustomers();
 		case "freshdesk":
-			return await fetchFreshdesk(credentials);
+			const freshdesk = new FreshdeskSupport(creds.subdomain, creds.clientId, creds.clientSecret);
+			return await freshdesk.fetchCustomers();
 		default:
 			throw new Error(`Unknown support provider: ${provider}`);
 	}

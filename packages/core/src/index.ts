@@ -5,12 +5,12 @@ export { combineData } from "./combiner";
 export type { StandardizedCRMCompany, StandardizedSupportCustomer, StandardizedCombinedCompany } from "./standardized-schemas";
 export { generateChurnReport } from "./ai-report";
 
-// OAuth exports
-export { authorizeHubSpot, callbackHubSpot } from "./crm/hubspot";
-export { authorizeSalesforce, callbackSalesforce } from "./crm/salesforce";
-export { authorizeZendesk, callbackZendesk } from "./support/zendesk";
-export { authorizeIntercom, callbackIntercom } from "./support/intercom";
-export { authorizeFreshdesk, callbackFreshdesk } from "./support/freshdesk";
+// Class exports
+export { HubSpotCRM } from "./crm/hubspot";
+export { SalesforceCRM } from "./crm/salesforce";
+export { ZendeskSupport } from "./support/zendesk";
+export { IntercomSupport } from "./support/intercom";
+export { FreshdeskSupport } from "./support/freshdesk";
 
 // Utility exports
 export {

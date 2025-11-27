@@ -1,5 +1,5 @@
-import { fetchHubSpot } from "./hubspot";
-import { fetchSalesforce } from "./salesforce";
+import { HubSpotCRM } from "./hubspot";
+import { SalesforceCRM } from "./salesforce";
 import type { StandardizedCRMCompany } from "../standardized-schemas";
 
 export async function fetchCRM(
@@ -9,9 +9,11 @@ export async function fetchCRM(
 	const creds: any = JSON.parse(credentials);
 	switch (provider) {
 		case "hubspot":
-			return await fetchHubSpot(creds.clientId, creds.clientSecret);
+			const hubspot = new HubSpotCRM(creds.clientId, creds.clientSecret);
+			return await hubspot.fetchCompanies();
 		case "salesforce":
-			return await fetchSalesforce(creds.instanceUrl, creds.clientId, creds.clientSecret);
+			const salesforce = new SalesforceCRM(creds.instanceUrl, creds.clientId, creds.clientSecret);
+			return await salesforce.fetchCompanies();
 		default:
 			throw new Error(`Unknown CRM provider: ${provider}`);
 	}
