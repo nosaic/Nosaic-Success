@@ -14,7 +14,7 @@ export async function signAccessToken(
 	payload: { userId: string; email: string },
 	secret: string,
 ): Promise<string> {
-	const secretKey: Uint8Array<ArrayBuffer> = new TextEncoder().encode(secret);
+		const secretKey = new TextEncoder().encode(secret) as Uint8Array;
 
 	return await new jose.SignJWT({
 		userId: payload.userId,
@@ -34,7 +34,7 @@ export async function verifyToken(
 	secret: string,
 ): Promise<JWTPayload | null> {
 	try {
-		const secretKey: Uint8Array<ArrayBuffer> = new TextEncoder().encode(secret);
+	const secretKey = new TextEncoder().encode(secret) as Uint8Array;
 		const { payload } = await jose.jwtVerify(token, secretKey);
 
 		return {

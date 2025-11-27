@@ -3,16 +3,11 @@ import { requireAuth } from "../middleware/auth";
 import {
 	encrypt,
 	generateId,
-	authorizeHubSpot,
-	callbackHubSpot,
-	authorizeSalesforce,
-	callbackSalesforce,
-	authorizeZendesk,
-	callbackZendesk,
-	authorizeIntercom,
-	callbackIntercom,
-	authorizeFreshdesk,
-	callbackFreshdesk,
+	HubSpotCRM,
+	SalesforceCRM,
+	ZendeskSupport,
+	IntercomSupport,
+	FreshdeskSupport,
 } from "@nosaic/core";
 
 const oauth = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -23,7 +18,8 @@ oauth.use("*", requireAuth);
 
 oauth.get("/salesforce/authorize", async (c) => {
 	const userId: string = c.get("userId");
-	const url: string = authorizeSalesforce(c.env.SALESFORCE_CLIENT_ID, c.env.API_URL, userId);
+	const instance = new SalesforceCRM("dummy", c.env.SALESFORCE_CLIENT_ID, "dummy");
+	const url: string = instance.authorize(c.env.SALESFORCE_CLIENT_ID, c.env.API_URL, userId);
 	return c.redirect(url);
 });
 
@@ -36,8 +32,9 @@ oauth.get("/salesforce/callback", async (c) => {
 	const { userId } = JSON.parse(atob(state));
 
 	try {
+		const instance = new SalesforceCRM("dummy", c.env.SALESFORCE_CLIENT_ID, c.env.SALESFORCE_CLIENT_SECRET);
 		const metadata: {instanceUrl: string, clientId: string, clientSecret: string} =
-            await callbackSalesforce(code, c.env.SALESFORCE_CLIENT_ID, c.env.SALESFORCE_CLIENT_SECRET, c.env.API_URL);
+            await instance.callback(code, c.env.SALESFORCE_CLIENT_ID, c.env.SALESFORCE_CLIENT_SECRET, c.env.API_URL);
 		const encryptedMetadata: string = await encrypt(JSON.stringify(metadata), c.env.ENCRYPTION_KEY);
 
 		const connectionId: string = generateId("conn");
@@ -69,7 +66,8 @@ oauth.get("/salesforce/callback", async (c) => {
 
 oauth.get("/hubspot/authorize", async (c) => {
 	const userId: string = c.get("userId");
-	const url: string = authorizeHubSpot(c.env.HUBSPOT_CLIENT_ID, c.env.API_URL, userId);
+	const instance = new HubSpotCRM(c.env.HUBSPOT_CLIENT_ID, "dummy");
+	const url: string = instance.authorize(c.env.HUBSPOT_CLIENT_ID, c.env.API_URL, userId);
 	return c.redirect(url);
 });
 
@@ -82,7 +80,8 @@ oauth.get("/hubspot/callback", async (c) => {
 	const { userId } = JSON.parse(atob(state));
 
 	try {
-		const metadata: {clientId: string, clientSecret: string} = await callbackHubSpot(code, c.env.HUBSPOT_CLIENT_ID, c.env.HUBSPOT_CLIENT_SECRET, c.env.API_URL);
+		const instance = new HubSpotCRM(c.env.HUBSPOT_CLIENT_ID, c.env.HUBSPOT_CLIENT_SECRET);
+		const metadata: {clientId: string, clientSecret: string} = await instance.callback(code, c.env.HUBSPOT_CLIENT_ID, c.env.HUBSPOT_CLIENT_SECRET, c.env.API_URL);
 		const encryptedMetadata: string = await encrypt(JSON.stringify(metadata), c.env.ENCRYPTION_KEY);
 
 		const connectionId: string = generateId("conn");
@@ -118,7 +117,8 @@ oauth.get("/zendesk/authorize", async (c) => {
 
 	if (!subdomain) return c.json({ error: "Subdomain required" }, 400);
 
-	const url: string = authorizeZendesk(c.env.ZENDESK_CLIENT_ID, c.env.API_URL, userId, subdomain);
+	const instance = new ZendeskSupport(subdomain, c.env.ZENDESK_CLIENT_ID, "dummy");
+	const url: string = instance.authorize(c.env.ZENDESK_CLIENT_ID, c.env.API_URL, userId, subdomain);
 	return c.redirect(url);
 });
 
@@ -131,8 +131,9 @@ oauth.get("/zendesk/callback", async (c) => {
 	const { userId, subdomain } = JSON.parse(atob(state));
 
 	try {
+		const instance = new ZendeskSupport(subdomain, c.env.ZENDESK_CLIENT_ID, c.env.ZENDESK_CLIENT_SECRET);
 		const metadata: {subdomain: string, clientId: string, clientSecret: string} =
-            await callbackZendesk(code, c.env.ZENDESK_CLIENT_ID, c.env.ZENDESK_CLIENT_SECRET, c.env.API_URL, subdomain);
+            await instance.callback(code, c.env.ZENDESK_CLIENT_ID, c.env.ZENDESK_CLIENT_SECRET, c.env.API_URL, subdomain);
 		const encryptedMetadata: string = await encrypt(JSON.stringify(metadata), c.env.ENCRYPTION_KEY);
 
 		const connectionId: string = generateId("conn");
@@ -164,7 +165,8 @@ oauth.get("/zendesk/callback", async (c) => {
 
 oauth.get("/intercom/authorize", async (c) => {
 	const userId: string = c.get("userId");
-	const url: string = authorizeIntercom(c.env.INTERCOM_CLIENT_ID, c.env.API_URL, userId);
+	const instance = new IntercomSupport(c.env.INTERCOM_CLIENT_ID, "dummy");
+	const url: string = instance.authorize(c.env.INTERCOM_CLIENT_ID, c.env.API_URL, userId);
 	return c.redirect(url);
 });
 
@@ -177,7 +179,8 @@ oauth.get("/intercom/callback", async (c) => {
 	const { userId } = JSON.parse(atob(state));
 
 	try {
-		const metadata: {clientId: string, clientSecret: string} = await callbackIntercom(code, c.env.INTERCOM_CLIENT_ID, c.env.INTERCOM_CLIENT_SECRET, c.env.API_URL);
+		const instance = new IntercomSupport(c.env.INTERCOM_CLIENT_ID, c.env.INTERCOM_CLIENT_SECRET);
+		const metadata: {clientId: string, clientSecret: string} = await instance.callback(code, c.env.INTERCOM_CLIENT_ID, c.env.INTERCOM_CLIENT_SECRET, c.env.API_URL);
 		const encryptedMetadata: string = await encrypt(JSON.stringify(metadata), c.env.ENCRYPTION_KEY);
 
 		const connectionId: string = generateId("conn");
@@ -213,7 +216,8 @@ oauth.get("/freshdesk/authorize", async (c) => {
 
 	if (!subdomain) return c.json({ error: "Subdomain required" }, 400);
 
-	const url: string = authorizeFreshdesk(c.env.FRESHDESK_CLIENT_ID, c.env.API_URL, userId, subdomain);
+	const instance = new FreshdeskSupport(subdomain, c.env.FRESHDESK_CLIENT_ID, "dummy");
+	const url: string = instance.authorize(c.env.FRESHDESK_CLIENT_ID, c.env.API_URL, userId, subdomain);
 	return c.redirect(url);
 });
 
@@ -226,8 +230,9 @@ oauth.get("/freshdesk/callback", async (c) => {
 	const { userId, subdomain } = JSON.parse(atob(state));
 
 	try {
+		const instance = new FreshdeskSupport(subdomain, c.env.FRESHDESK_CLIENT_ID, c.env.FRESHDESK_CLIENT_SECRET);
 		const metadata: {subdomain: string, clientId: string, clientSecret: string} =
-            await callbackFreshdesk(code, c.env.FRESHDESK_CLIENT_ID, c.env.FRESHDESK_CLIENT_SECRET, c.env.API_URL, subdomain);
+            await instance.callback(code, c.env.FRESHDESK_CLIENT_ID, c.env.FRESHDESK_CLIENT_SECRET, c.env.API_URL, subdomain);
 		const encryptedMetadata: string = await encrypt(JSON.stringify(metadata), c.env.ENCRYPTION_KEY);
 
 		const connectionId: string = generateId("conn");

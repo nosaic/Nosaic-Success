@@ -12,7 +12,7 @@ import {
     generateChurnReport,
     sendEmail,
     sendSlack,
-    generateId, type CRMCompany, type SupportCustomer, type CombinedCompany,
+    generateId, type StandardizedCRMCompany, type StandardizedSupportCustomer, type StandardizedCombinedCompany,
 } from "@nosaic/core";
 
 interface WorkflowParams {
@@ -33,7 +33,7 @@ export class ChurnReportWorkflow extends WorkflowEntrypoint<
 		const params = (event as any).params as WorkflowParams;
 
 		// Step 1: Fetch CRM data (auto-retries on failure)
-		const crmData: CRMCompany[] | null = await step.do("fetch CRM data", async (): Promise<CRMCompany[] | null> => {
+		const crmData: StandardizedCRMCompany[] | null = await step.do("fetch CRM data", async (): Promise<StandardizedCRMCompany[] | null> => {
 			if (!params.crmProvider || !params.crmMetadata) {
 				return null;
 			}
@@ -41,7 +41,7 @@ export class ChurnReportWorkflow extends WorkflowEntrypoint<
 		});
 
 		// Step 2: Fetch support platform data
-		const supportData: SupportCustomer[] = await step.do("fetch support data", async (): Promise<SupportCustomer[]> => {
+		const supportData: StandardizedSupportCustomer[] = await step.do("fetch support data", async (): Promise<StandardizedSupportCustomer[]> => {
 			const providerUpper: string = params.supportProvider.toUpperCase();
 			const credentials = {
 				...params.supportMetadata,
@@ -52,7 +52,7 @@ export class ChurnReportWorkflow extends WorkflowEntrypoint<
 		});
 
 		// Step 3: Combine data into company objects
-		const companies: CombinedCompany[] = await step.do("combine data", async (): Promise<CombinedCompany[]> => {
+		const companies: StandardizedCombinedCompany[] = await step.do("combine data", async (): Promise<StandardizedCombinedCompany[]> => {
 			return combineData(
 				crmData,
 				supportData,
