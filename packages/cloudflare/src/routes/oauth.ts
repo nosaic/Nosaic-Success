@@ -8,7 +8,7 @@ import {
 	ZendeskSupport,
 	IntercomSupport,
 	FreshdeskSupport,
-} from "@nosaic/core";
+} from "@nosaic-success/core";
 
 const oauth = new Hono<{ Bindings: Env; Variables: Variables }>();
 

@@ -1,5 +1,5 @@
 import type { Context, Next } from "hono";
-import { verifyToken, type JWTPayload } from "@nosaic/core";
+import { verifyToken, type JWTPayload } from "@nosaic-success/core";
 
 /**
  * Authentication middleware - requires valid JWT

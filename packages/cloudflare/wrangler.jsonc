@@ -2,7 +2,7 @@
 	"$schema": "../../node_modules/wrangler/config-schema.json",
 	"name": "nosaic-success",
 	"main": "src/index.ts",
-	"compatibility_date": "2025-11-11",
+	"compatibility_date": "2025-11-27",
 	"d1_databases": [
 		{
 			"binding": "SuccessMainDatabase",

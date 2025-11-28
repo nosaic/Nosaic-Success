@@ -2,7 +2,7 @@
 
 import { Hono } from "hono";
 import { requireAuth } from "../middleware/auth";
-import { encrypt } from "@nosaic/core";
+import { encrypt } from "@nosaic-success/core";
 
 const dashboard = new Hono<{ Bindings: Env; Variables: Variables }>();
 

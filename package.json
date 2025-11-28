@@ -9,6 +9,8 @@
   "scripts": {
     "typecheck": "npm run typecheck --workspaces",
     "build": "npm run build --workspaces",
+    "buildCore": "npm run build --workspace=@nosaic-success/core",
+    "buildCloudflare": "npm run build --workspace=@nosaic-success/cloudflare",
     "deployCloud": "npm run deploy --workspace=@nosaic-success/cloudflare"
   },
   "devDependencies": {

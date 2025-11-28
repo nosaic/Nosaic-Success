@@ -7,7 +7,7 @@ import {
 	generateId,
 	generateToken,
 	signAccessToken,
-} from "@nosaic/core";
+} from "@nosaic-success/core";
 
 const auth = new Hono<{ Bindings: Env }>();
 

@@ -16,6 +16,6 @@
 	},
 	"dependencies": {
 		"hono": "^4.10.6",
-		"@nosaic/core": "file:../core"
+		"@nosaic-success/core": "file:../core"
 	}
 }

@@ -13,7 +13,7 @@ import {
     sendEmail,
     sendSlack,
     generateId, type StandardizedCRMCompany, type StandardizedSupportCustomer, type StandardizedCombinedCompany,
-} from "@nosaic/core";
+} from "@nosaic-success/core";
 
 interface WorkflowParams {
 	userId: string;
