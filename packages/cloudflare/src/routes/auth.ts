@@ -27,7 +27,7 @@ auth.post("/register", async (c): Promise<Response> => {
 	}
 
 	// Check if user exists
-	const existing: Record<string, unknown> | null = await c.env.DB.prepare(
+	const existing: Record<string, unknown> | null = await c.env.SuccessMainDatabase.prepare(
 		"SELECT id FROM users WHERE email = ?",
 	)
 		.bind(email)
@@ -42,7 +42,7 @@ auth.post("/register", async (c): Promise<Response> => {
 	const passwordHash: string = await hashPassword(password);
 	const verificationToken: string = generateToken();
 
-	await c.env.DB.prepare(
+	await c.env.SuccessMainDatabase.prepare(
 		`INSERT INTO users (id, email, password_hash, verification_token, email_verified, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
 	)
@@ -80,7 +80,7 @@ auth.post("/login", async (c) => {
 	}
 
 	// Get user
-	const user = (await c.env.DB.prepare(
+	const user = (await c.env.SuccessMainDatabase.prepare(
 		"SELECT id, email, password_hash, email_verified FROM users WHERE email = ?",
 	)
 		.bind(email.toLowerCase())
@@ -112,7 +112,7 @@ auth.post("/login", async (c) => {
 
 	// Store refresh token
 	const sessionId: string = generateId("sess");
-	await c.env.DB.prepare(
+	await c.env.SuccessMainDatabase.prepare(
 		`INSERT INTO sessions (id, user_id, refresh_token_hash, expires_at, created_at)
      VALUES (?, ?, ?, ?, ?)`,
 	)
@@ -145,7 +145,7 @@ auth.get("/verify", async (c) => {
 		return c.json({ error: "Verification token required" }, 400);
 	}
 
-	const user: Record<string, unknown> | null = await c.env.DB.prepare(
+	const user: Record<string, unknown> | null = await c.env.SuccessMainDatabase.prepare(
 		"SELECT id FROM users WHERE verification_token = ?",
 	)
 		.bind(token)
@@ -155,7 +155,7 @@ auth.get("/verify", async (c) => {
 		return c.json({ error: "Invalid verification token" }, 400);
 	}
 
-	await c.env.DB.prepare(
+	await c.env.SuccessMainDatabase.prepare(
 		"UPDATE users SET email_verified = 1, verification_token = NULL WHERE id = ?",
 	)
 		.bind(user.id)
@@ -175,7 +175,7 @@ auth.post("/refresh", async (c) => {
 	}
 
 	// Get all sessions (we need to check each hash)
-	const sessions: D1Result<Record<string, unknown>> = await c.env.DB.prepare(
+	const sessions: D1Result<Record<string, unknown>> = await c.env.SuccessMainDatabase.prepare(
 		"SELECT id, user_id, refresh_token_hash, expires_at FROM sessions WHERE expires_at > ?",
 	)
 		.bind(Date.now())
@@ -196,7 +196,7 @@ auth.post("/refresh", async (c) => {
 	}
 
 	// Get user
-	const user = (await c.env.DB.prepare(
+	const user = (await c.env.SuccessMainDatabase.prepare(
 		"SELECT id, email FROM users WHERE id = ?",
 	)
 		.bind(validSession.user_id)
@@ -222,7 +222,7 @@ auth.post("/logout", async (c) => {
 	}
 
 	// Find and delete session
-	const sessions: D1Result<Record<string, unknown>> = await c.env.DB.prepare(
+	const sessions: D1Result<Record<string, unknown>> = await c.env.SuccessMainDatabase.prepare(
 		"SELECT id, refresh_token_hash FROM sessions",
 	).all();
 
@@ -230,7 +230,7 @@ auth.post("/logout", async (c) => {
 		if (
 			await verifyPassword(refreshToken, session.refresh_token_hash as string)
 		) {
-			await c.env.DB.prepare("DELETE FROM sessions WHERE id = ?")
+			await c.env.SuccessMainDatabase.prepare("DELETE FROM sessions WHERE id = ?")
 				.bind(session.id)
 				.run();
 			break;

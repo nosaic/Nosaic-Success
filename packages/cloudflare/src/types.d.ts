@@ -1,7 +1,7 @@
 interface Env {
 	// Bindings
-	DB: D1Database;
-	KV: KVNamespace;
+	SuccessMainDatabase: D1Database;
+	SuccessKV: KVNamespace;
 	CHURN_REPORT: Workflow;
 
 	// Secrets

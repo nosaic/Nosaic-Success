@@ -16,7 +16,7 @@ dashboard.use("*", requireAuth);
 dashboard.get("/config", async (c) => {
 	const userId: string = c.get("userId");
 
-	const config: Record<string, unknown> | null = await c.env.DB.prepare(
+	const config: Record<string, unknown> | null = await c.env.SuccessMainDatabase.prepare(
 		"SELECT * FROM workflow_configs WHERE user_id = ?",
 	)
 		.bind(userId)
@@ -72,14 +72,14 @@ dashboard.put("/config", async (c) => {
 	const nextRun: number = calculateNextRun(reportFrequency, now);
 
 	// Check if config exists
-	const existing: Record<string, unknown> | null = await c.env.DB.prepare(
+	const existing: Record<string, unknown> | null = await c.env.SuccessMainDatabase.prepare(
 		"SELECT user_id FROM workflow_configs WHERE user_id = ?",
 	)
 		.bind(userId)
 		.first();
 
 	if (existing) {
-		await c.env.DB.prepare(
+		await c.env.SuccessMainDatabase.prepare(
 			`UPDATE workflow_configs
        SET report_frequency = ?, report_destination = ?, destination_config = ?,
            next_run_at = ?, updated_at = ?
@@ -95,7 +95,7 @@ dashboard.put("/config", async (c) => {
 			)
 			.run();
 	} else {
-		await c.env.DB.prepare(
+		await c.env.SuccessMainDatabase.prepare(
 			`INSERT INTO workflow_configs (
         user_id, report_frequency, report_destination, destination_config,
         next_run_at, created_at, updated_at
@@ -123,7 +123,7 @@ dashboard.put("/config", async (c) => {
 dashboard.post("/config/toggle", async (c) => {
 	const userId: string = c.get("userId");
 
-	const config: Record<string, unknown> | null = await c.env.DB.prepare(
+	const config: Record<string, unknown> | null = await c.env.SuccessMainDatabase.prepare(
 		"SELECT enabled FROM workflow_configs WHERE user_id = ?",
 	)
 		.bind(userId)
@@ -135,7 +135,7 @@ dashboard.post("/config/toggle", async (c) => {
 
 	const newState: 0 | 1 = config.enabled === 1 ? 0 : 1;
 
-	await c.env.DB.prepare(
+	await c.env.SuccessMainDatabase.prepare(
 		"UPDATE workflow_configs SET enabled = ?, updated_at = ? WHERE user_id = ?",
 	)
 		.bind(newState, Date.now(), userId)
@@ -159,14 +159,14 @@ dashboard.post("/integrations/crm", async (c) => {
 	const encryptedCreds: string | null =
 		provider === "none" ? null : await encrypt(apiKey, c.env.ENCRYPTION_KEY);
 
-	const existing: Record<string, unknown> | null = await c.env.DB.prepare(
+	const existing: Record<string, unknown> | null = await c.env.SuccessMainDatabase.prepare(
 		"SELECT user_id FROM workflow_configs WHERE user_id = ?",
 	)
 		.bind(userId)
 		.first();
 
 	if (existing) {
-		await c.env.DB.prepare(
+		await c.env.SuccessMainDatabase.prepare(
 			`UPDATE workflow_configs
        SET crm_provider = ?, crm_encrypted_credentials = ?, updated_at = ?
        WHERE user_id = ?`,
@@ -199,14 +199,14 @@ dashboard.post("/integrations/support", async (c) => {
 
 	const encryptedCreds: string = await encrypt(apiKey, c.env.ENCRYPTION_KEY);
 
-	const existing: Record<string, unknown> | null = await c.env.DB.prepare(
+	const existing: Record<string, unknown> | null = await c.env.SuccessMainDatabase.prepare(
 		"SELECT user_id FROM workflow_configs WHERE user_id = ?",
 	)
 		.bind(userId)
 		.first();
 
 	if (existing) {
-		await c.env.DB.prepare(
+		await c.env.SuccessMainDatabase.prepare(
 			`UPDATE workflow_configs
        SET support_provider = ?, support_encrypted_credentials = ?, updated_at = ?
        WHERE user_id = ?`,
@@ -228,7 +228,7 @@ dashboard.get("/reports", async (c) => {
 	const userId: string = c.get("userId");
 	const limit: number = parseInt(c.req.query("limit") || "10");
 
-	const reports: D1Result<Record<string, unknown>> = await c.env.DB.prepare(
+	const reports: D1Result<Record<string, unknown>> = await c.env.SuccessMainDatabase.prepare(
 		`SELECT id, status, error_message, created_at
      FROM reports
      WHERE user_id = ?
@@ -249,7 +249,7 @@ dashboard.get("/reports/:id", async (c) => {
 	const userId: string = c.get("userId");
 	const reportId: string = c.req.param("id");
 
-	const report: Record<string, unknown> | null = await c.env.DB.prepare(
+	const report: Record<string, unknown> | null = await c.env.SuccessMainDatabase.prepare(
 		"SELECT * FROM reports WHERE id = ? AND user_id = ?",
 	)
 		.bind(reportId, userId)

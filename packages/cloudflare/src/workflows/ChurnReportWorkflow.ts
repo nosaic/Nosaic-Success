@@ -81,14 +81,14 @@ export class ChurnReportWorkflow extends WorkflowEntrypoint<
 
 		// Step 6: Log completion to database
 		await step.do("log report", async (): Promise<void> => {
-			await this.env.DB.prepare(
+			await this.env.SuccessMainDatabase.prepare(
 				`INSERT INTO reports (id, user_id, report_content, status, created_at)
          VALUES (?, ?, ?, ?, ?)`,
 			)
 				.bind(generateId("rpt"), params.userId, report, "success", Date.now())
 				.run();
 
-			await this.env.DB.prepare(
+			await this.env.SuccessMainDatabase.prepare(
 				"UPDATE workflow_configs SET last_run_at = ? WHERE user_id = ?",
 			)
 				.bind(Date.now(), params.userId)

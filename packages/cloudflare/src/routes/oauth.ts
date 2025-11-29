@@ -38,7 +38,7 @@ oauth.get("/salesforce/callback", async (c) => {
 		const encryptedMetadata: string = await encrypt(JSON.stringify(metadata), c.env.ENCRYPTION_KEY);
 
 		const connectionId: string = generateId("conn");
-		await c.env.DB.prepare(
+		await c.env.SuccessMainDatabase.prepare(
 			`INSERT OR REPLACE INTO oauth_connections
 	     (id, user_id, provider, encrypted_access_token, encrypted_refresh_token, token_expires_at, scope, created_at, updated_at)
 	     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -85,7 +85,7 @@ oauth.get("/hubspot/callback", async (c) => {
 		const encryptedMetadata: string = await encrypt(JSON.stringify(metadata), c.env.ENCRYPTION_KEY);
 
 		const connectionId: string = generateId("conn");
-		await c.env.DB.prepare(
+		await c.env.SuccessMainDatabase.prepare(
 			`INSERT OR REPLACE INTO oauth_connections
 	     (id, user_id, provider, encrypted_access_token, encrypted_refresh_token, token_expires_at, scope, created_at, updated_at)
 	     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -137,7 +137,7 @@ oauth.get("/zendesk/callback", async (c) => {
 		const encryptedMetadata: string = await encrypt(JSON.stringify(metadata), c.env.ENCRYPTION_KEY);
 
 		const connectionId: string = generateId("conn");
-		await c.env.DB.prepare(
+		await c.env.SuccessMainDatabase.prepare(
 			`INSERT OR REPLACE INTO oauth_connections
 	     (id, user_id, provider, encrypted_access_token, encrypted_refresh_token, token_expires_at, scope, created_at, updated_at)
 	     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -184,7 +184,7 @@ oauth.get("/intercom/callback", async (c) => {
 		const encryptedMetadata: string = await encrypt(JSON.stringify(metadata), c.env.ENCRYPTION_KEY);
 
 		const connectionId: string = generateId("conn");
-		await c.env.DB.prepare(
+		await c.env.SuccessMainDatabase.prepare(
 			`INSERT OR REPLACE INTO oauth_connections
 	     (id, user_id, provider, encrypted_access_token, encrypted_refresh_token, token_expires_at, scope, created_at, updated_at)
 	     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -236,7 +236,7 @@ oauth.get("/freshdesk/callback", async (c) => {
 		const encryptedMetadata: string = await encrypt(JSON.stringify(metadata), c.env.ENCRYPTION_KEY);
 
 		const connectionId: string = generateId("conn");
-		await c.env.DB.prepare(
+		await c.env.SuccessMainDatabase.prepare(
 			`INSERT OR REPLACE INTO oauth_connections
 	     (id, user_id, provider, encrypted_access_token, encrypted_refresh_token, token_expires_at, scope, created_at, updated_at)
 	     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -266,7 +266,7 @@ oauth.delete("/connections/:id", async (c) => {
 	const userId: string = c.get("userId");
 	const connectionId: string = c.req.param("id");
 
-	await c.env.DB.prepare(
+	await c.env.SuccessMainDatabase.prepare(
 		"DELETE FROM oauth_connections WHERE id = ? AND user_id = ?",
 	)
 		.bind(connectionId, userId)
@@ -280,7 +280,7 @@ oauth.delete("/connections/:id", async (c) => {
 oauth.get("/connections", async (c) => {
 	const userId: string = c.get("userId");
 
-	const connections: D1Result<Record<string, unknown>> = await c.env.DB.prepare(
+	const connections: D1Result<Record<string, unknown>> = await c.env.SuccessMainDatabase.prepare(
 		"SELECT id, provider, created_at FROM oauth_connections WHERE user_id = ?",
 	)
 		.bind(userId)

@@ -15,7 +15,7 @@ workflows.post("/trigger", async (c) => {
 	const userId: string = c.get("userId");
 
 	// Get workflow config
-	const config = (await c.env.DB.prepare(
+	const config = (await c.env.SuccessMainDatabase.prepare(
 		"SELECT * FROM workflow_configs WHERE user_id = ?",
 	)
 		.bind(userId)
@@ -26,7 +26,7 @@ workflows.post("/trigger", async (c) => {
 	}
 
 	// Get OAuth connections
-	const connections: D1Result<Record<string, unknown>> = await c.env.DB.prepare(
+	const connections: D1Result<Record<string, unknown>> = await c.env.SuccessMainDatabase.prepare(
 		"SELECT * FROM oauth_connections WHERE user_id = ?",
 	)
 		.bind(userId)

@@ -2,7 +2,7 @@ export async function handleScheduled(env: Env): Promise<void> {
 	const now: number = Date.now();
 
 	// Get workflows that need to run
-	const configs: D1Result<Record<string, unknown>> = await env.DB.prepare(
+	const configs: D1Result<Record<string, unknown>> = await env.SuccessMainDatabase.prepare(
 		"SELECT * FROM workflow_configs WHERE enabled = 1 AND next_run_at <= ?",
 	)
 		.bind(now)
@@ -13,7 +13,7 @@ export async function handleScheduled(env: Env): Promise<void> {
 	for (const config of configs.results as any[]) {
 		try {
 			// Get OAuth connections for this user
-			const connections: D1Result<Record<string, unknown>> = await env.DB.prepare(
+			const connections: D1Result<Record<string, unknown>> = await env.SuccessMainDatabase.prepare(
 				"SELECT * FROM oauth_connections WHERE user_id = ?",
 			)
 				.bind(config.user_id)
@@ -59,7 +59,7 @@ export async function handleScheduled(env: Env): Promise<void> {
 
 			// Calculate and update next run
 			const nextRun: number = calculateNextRun(config.report_frequency, now);
-			await env.DB.prepare(
+			await env.SuccessMainDatabase.prepare(
 				"UPDATE workflow_configs SET next_run_at = ? WHERE user_id = ?",
 			)
 				.bind(nextRun, config.user_id)

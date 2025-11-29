@@ -11,14 +11,14 @@ export async function rateLimit(config: RateLimitConfig): Promise<(c: Context, n
 		const identifier: string = c.req.header("cf-connecting-ip") || "unknown";
 		const key = `ratelimit:${config.key}:${identifier}`;
 
-		const current: any = await c.env.KV.get(key);
+		const current: any = await c.env.SuccessKV.get(key);
 		const count: number = current ? parseInt(current) : 0;
 
 		if (count >= config.limit) {
 			return c.json({ error: "Too many requests" }, 429);
 		}
 
-		await c.env.KV.put(key, (count + 1).toString(), {
+		await c.env.SuccessKV.put(key, (count + 1).toString(), {
 			expirationTtl: Math.floor(config.windowMs / 1000),
 		});
 
