@@ -5,9 +5,10 @@
 	"type": "module",
 	"main": "src/index.ts",
 	"scripts": {
+		"typecheck": "tsc --noEmit",
 		"build": "tsc",
 		"deploy": "npx wrangler deploy",
-		"typecheck": "tsc --noEmit"
+		"migration": "npx wrangler d1 migrations apply success-main-database"
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "^4.20251121.0",
