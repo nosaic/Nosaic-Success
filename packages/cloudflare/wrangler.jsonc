@@ -7,7 +7,8 @@
 		{
 			"binding": "SuccessMainDatabase",
 			"database_name": "success-main-database",
-			"database_id": "1fd00513-fd97-4a00-9d2e-65d5a145b768"
+			"database_id": "1fd00513-fd97-4a00-9d2e-65d5a145b768",
+			"migrations_dir": "./migrations"
 		}
 	],
 	"kv_namespaces": [
@@ -15,5 +16,20 @@
 			"binding": "SuccessKV",
 			"id": "46267b589685446a9ed90adb5310c1c8"
 		}
-	]
+	],
+	"observability": {
+    "enabled": false,
+    "head_sampling_rate": 1,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "persist": true,
+      "invocation_logs": true
+    },
+    "traces": {
+      "enabled": true,
+      "persist": true,
+      "head_sampling_rate": 1
+    }
+  }
 }
