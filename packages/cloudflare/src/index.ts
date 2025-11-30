@@ -2,7 +2,6 @@
 
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import auth from "./routes/auth";
 import dashboard from "./routes/dashboard";
 import workflows from "./routes/workflows";
 import oauth from "./routes/oauth";
@@ -20,7 +19,6 @@ app.use(
 );
 
 // Routes
-app.route("/auth", auth);
 app.route("/dashboard", dashboard);
 app.route("/workflows", workflows);
 app.route("/oauth", oauth);

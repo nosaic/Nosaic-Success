@@ -22,6 +22,6 @@ export {
 	generateToken,
 } from "./utils/crypto";
 
-export { signAccessToken, verifyToken, type JWTPayload } from "./utils/jwt";
+
 export { sendEmail } from "./utils/email";
 export { sendSlack } from "./utils/slack";

@@ -16,7 +16,8 @@
 		"wrangler": "^4.51.0"
 	},
 	"dependencies": {
-		"hono": "^4.10.6",
-		"@nosaic-success/core": "file:../core"
+		"@clerk/clerk-sdk-node": "^4.13.23",
+		"@nosaic-success/core": "file:../core",
+		"hono": "^4.10.6"
 	}
 }

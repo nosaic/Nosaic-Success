@@ -5,7 +5,7 @@ interface Env {
 	CHURN_REPORT: Workflow;
 
 	// Secrets
-	JWT_SECRET: string;
+	CLERK_SECRET_KEY: string;
 	ENCRYPTION_KEY: string;
 	OPENROUTER_API_KEY: string;
 	RESEND_API_KEY: string;
